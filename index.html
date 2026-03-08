@@ -2,10 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Pro Load Tester (Worker + Anti-Cache)</title>
+    <title>Pro Load Tester (Multi-Worker Edition)</title>
     <style>
         body{ background:#0b0b0b; color:#00ff9c; font-family:monospace; text-align:center; padding-top:50px; }
-        .panel{ border:1px solid #00ff9c; width:400px; margin:auto; padding:25px; box-shadow:0 0 30px #00ff9c33; border-radius:10px; }
+        .panel{ border:1px solid #00ff9c; width:420px; margin:auto; padding:25px; box-shadow:0 0 30px #00ff9c33; border-radius:10px; }
         input{ width:90%; padding:12px; margin:8px 0; background:#111; border:1px solid #333; color:#00ff9c; border-radius:5px; }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button{ flex:1; padding:12px; border:none; cursor:pointer; font-weight:bold; border-radius:5px; transition: 0.2s; }
@@ -14,35 +14,40 @@
         button:hover { opacity: 0.8; transform: scale(1.02); }
         #status{ margin-top:20px; background:#161616; padding:15px; text-align:left; border-left:4px solid #00ff9c; }
         .val { color: #fff; float: right; font-weight: bold; }
+        .hint { font-size: 10px; color: #666; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="panel">
-    <h2 style="letter-spacing: 2px;">⚡ WORKER ENGINE v2</h2>
-    <p style="font-size: 10px; color: #888;">(已啟用隨機參數繞過快取機制)</p>
+    <h2 style="letter-spacing: 2px;">🔥 MULTI-WORKER ENGINE</h2>
+    <p class="hint">已啟用：隨機參數繞過快取 + 多執行緒併發技術</p>
+    
     <input id="url" placeholder="https://target.com" value="https://">
-    <input id="users" type="number" placeholder="每秒請求數 (RPS)" value="100">
+    <input id="rps" type="number" placeholder="每條執行緒請求數 (建議 50-200)" value="100">
+    <input id="threads" type="number" placeholder="執行緒數量 (建議 5-10)" value="5">
     
     <div class="btn-group">
-        <button class="start" onclick="toggleTest(true)">開始發動</button>
-        <button class="stop" onclick="toggleTest(false)">立即停止</button>
+        <button class="start" onclick="toggleTest(true)">火力全開</button>
+        <button class="stop" onclick="toggleTest(false)">停止運作</button>
     </div>
 
     <div id="status">
         <div>狀態: <span id="state" class="val">準備就緒</span></div>
-        <div style="margin-top:8px">成功: <span id="sCount" class="val">0</span></div>
-        <div style="margin-top:8px">失敗: <span id="eCount" class="val">0</span></div>
-        <div style="margin-top:8px">時間: <span id="timer" class="val">0s</span></div>
+        <div>活躍執行緒: <span id="tActive" class="val">0</span></div>
+        <div style="margin-top:8px">成功總數: <span id="sCount" class="val">0</span></div>
+        <div style="margin-top:8px">失敗總數: <span id="eCount" class="val">0</span></div>
+        <div style="margin-top:8px">測試時間: <span id="timer" class="val">0s</span></div>
     </div>
 </div>
 
 <script>
-let worker = null;
+let workers = [];
 let startTime = null;
 let timerId = null;
+let totalSuccess = 0;
+let totalError = 0;
 
-// Worker 代碼：將快取破壞邏輯寫在背景
 const workerCode = `
     let running = false;
     let success = 0;
@@ -56,64 +61,74 @@ const workerCode = `
                     const s = Date.now();
                     for(let i=0; i<rps; i++) {
                         if(!running) break;
-                        
-                        // 【關鍵：快取破壞者】產生隨機參數，防止伺服器快取回應
                         const rand = Math.random().toString(36).substring(7);
-                        const separator = url.includes('?') ? '&' : '?';
-                        const target = url + separator + 'cb=' + rand;
+                        const target = url + (url.includes('?') ? '&' : '?') + 'cb=' + rand;
 
-                        fetch(target, { 
-                            mode: 'no-cors', 
-                            cache: 'no-store',
-                            headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } 
-                        })
-                        .then(() => success++)
-                        .catch(() => error++);
+                        fetch(target, { mode: 'no-cors', cache: 'no-store' })
+                            .then(() => { success++; })
+                            .catch(() => { error++; });
                     }
                     postMessage({ success, error });
-                    // 計算延遲，精確維持每秒 RPS
                     await new Promise(r => setTimeout(r, Math.max(0, 1000 - (Date.now()-s))));
                 }
             })();
-        } else if (cmd === 'stop') { running = false; }
+        } else if (cmd === 'stop') { running = false; self.close(); }
     };
 `;
 
 function toggleTest(start) {
     if (start) {
         const urlInput = document.getElementById("url").value.trim();
-        const rps = document.getElementById("users").value;
-        if(!urlInput || !rps) return alert("請填寫參數");
-
-        // 自動修正網址格式
+        const rpsPerThread = document.getElementById("rps").value;
+        const threadCount = document.getElementById("threads").value;
+        
+        if(!urlInput || !rpsPerThread) return alert("請填寫完整參數");
         const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
 
+        // 重置數據
+        totalSuccess = 0;
+        totalError = 0;
+        workers = [];
+        
+        // 啟動多個 Worker
         const blob = new Blob([workerCode], { type: 'application/javascript' });
-        worker = new Worker(URL.createObjectURL(blob));
-        
-        worker.onmessage = (e) => {
-            document.getElementById("sCount").innerText = e.data.success;
-            document.getElementById("eCount").innerText = e.data.error;
-        };
+        const workerUrl = URL.createObjectURL(blob);
 
-        worker.postMessage({ cmd: 'start', url, rps });
-        
-        startTime = Date.now();
-        timerId = setInterval(updateTimer, 100);
-        document.getElementById("state").innerText = "🔥 運行中";
-        document.getElementById("state").style.color = "yellow";
-    } else {
-        if(worker) {
-            worker.postMessage({ cmd: 'stop' });
-            worker.terminate();
+        for (let i = 0; i < threadCount; i++) {
+            let w = new Worker(workerUrl);
+            let lastS = 0;
+            let lastE = 0;
+
+            w.onmessage = (e) => {
+                // 計算增量，避免重複加總
+                totalSuccess += (e.data.success - lastS);
+                totalError += (e.data.error - lastE);
+                lastS = e.data.success;
+                lastE = e.data.error;
+                
+                document.getElementById("sCount").innerText = totalSuccess;
+                document.getElementById("eCount").innerText = totalError;
+            };
+            w.postMessage({ cmd: 'start', url, rps: rpsPerThread });
+            workers.push(w);
         }
+
+        startTime = Date.now();
+        timerId = setInterval(updateUI, 100);
+        document.getElementById("state").innerText = "🚀 火力噴射中";
+        document.getElementById("state").style.color = "#00ff9c";
+        document.getElementById("tActive").innerText = threadCount;
+    } else {
+        workers.forEach(w => w.postMessage({ cmd: 'stop' }));
+        workers = [];
         clearInterval(timerId);
-        document.getElementById("state").innerText = "🛑 已停止";
+        document.getElementById("state").innerText = "🛑 已冷卻";
         document.getElementById("state").style.color = "#ff4757";
+        document.getElementById("tActive").innerText = "0";
     }
 }
 
-function updateTimer() {
+function updateUI() {
     const sec = ((Date.now() - startTime) / 1000).toFixed(1);
     document.getElementById("timer").innerText = sec + "s";
 }
