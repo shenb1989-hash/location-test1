@@ -1,100 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
 <meta charset="utf-8">
-<title>Load Test Panel (Live)</title>
-
+<title>Pro Load Tester (Advanced)</title>
 <style>
-body{ background:#0b0b0b; color:#00ff9c; font-family:monospace; text-align:center; padding-top:80px; }
-.panel{ border:1px solid #00ff9c; width:350px; margin:auto; padding:20px; box-shadow:0 0 20px #00ff9c44; }
-input{ width:90%; padding:8px; margin:6px; background:#111; border:1px solid #00ff9c; color:#00ff9c; }
-button{ padding:10px 20px; margin:5px; background:#00ff9c; border:none; cursor:pointer; font-weight:bold; }
-button:hover{ background:#00cc7a; }
-#status{ margin-top:15px; font-size: 0.9em; line-height: 1.5; }
-.count { color: #fff; }
+    :root { --main: #00ff9c; --bg: #0d0d0d; }
+    body { background: var(--bg); color: var(--main); font-family: 'Segoe UI', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .panel { border: 1px solid var(--main); width: 450px; padding: 30px; box-shadow: 0 0 30px rgba(0,255,156,0.2); border-radius: 8px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    input, select, textarea { background: #1a1a1a; border: 1px solid #333; color: var(--main); padding: 10px; border-radius: 4px; font-family: monospace; width: 100%; box-sizing: border-box; }
+    input:focus { border-color: var(--main); outline: none; }
+    button { padding: 12px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; border-radius: 4px; }
+    .btn-start { background: var(--main); color: #000; width: 68%; }
+    .btn-stop { background: #ff4757; color: #fff; width: 30%; }
+    button:hover { opacity: 0.8; transform: translateY(-1px); }
+    #stats { margin-top: 20px; background: #161616; padding: 15px; text-align: left; font-size: 0.85em; border-radius: 4px; }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 3px; }
+    .live-dot { height: 10px; width: 10px; background-color: #555; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    .active { background-color: #ff4757; animation: blink 1s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
-
 </head>
 <body>
 
 <div class="panel">
-    <h2>LOAD TEST PANEL</h2>
-    <input id="url" placeholder="https://your-api-link.com" value="https://">
-    <input id="users" type="number" placeholder="每秒請求數 (例如: 10)">
-    <input id="time" type="number" placeholder="測試持續時間 (秒)">
-    <br>
-    <button onclick="startTest()">開始測試</button>
-    <button onclick="stopTest()">強制停止</button>
+    <h2 style="margin-top:0">🚀 ADVANCED LOAD TESTER</h2>
+    
+    <input id="url" placeholder="Target URL" value="https://jsonplaceholder.typicode.com" style="margin-bottom:10px">
+    
+    <div class="grid">
+        <select id="method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+        </select>
+        <input id="users" type="number" placeholder="並發數 (RPS)" value="5">
+    </div>
+    
+    <textarea id="body" placeholder='POST Body (JSON format)' rows="3" style="margin-bottom:10px; display:none"></textarea>
 
-    <div id="status">準備就緒</div>
+    <div class="grid" style="grid-template-columns: 1fr;">
+        <input id="time" type="number" placeholder="持續時間 (秒)" value="10">
+    </div>
+
+    <div style="display: flex; justify-content: space-between;">
+        <button class="btn-start" onclick="startTest()">LAUNCH ATTACK</button>
+        <button class="btn-stop" onclick="stopTest()">STOP</button>
+    </div>
+
+    <div id="stats">
+        <div class="stat-row"><span>Status:</span> <span id="status"><span class="live-dot"></span>Ready</span></div>
+        <div class="stat-row"><span>Successful:</span> <span id="scount" style="color:#fff">0</span></div>
+        <div class="stat-row"><span>Failed:</span> <span id="ecount" style="color:#ff4757">0</span></div>
+        <div class="stat-row"><span>Avg Latency:</span> <span id="latency" style="color:yellow">0 ms</span></div>
+    </div>
 </div>
 
 <script>
 let running = false;
-let timers = [];
-let successCount = 0;
-let errorCount = 0;
+let stats = { success: 0, error: 0, totalLatency: 0 };
+let controller = new AbortController();
 
-function startTest() {
+// 切換 POST Body 顯示
+document.getElementById('method').onchange = function() {
+    document.getElementById('body').style.display = this.value === 'POST' ? 'block' : 'none';
+};
+
+async function startTest() {
     if (running) return;
+    
+    const config = {
+        url: document.getElementById("url").value,
+        rps: parseInt(document.getElementById("users").value),
+        sec: parseInt(document.getElementById("time").value),
+        method: document.getElementById("method").value,
+        body: document.getElementById("body").value
+    };
 
-    const url = document.getElementById("url").value;
-    const usersPerSec = parseInt(document.getElementById("users").value);
-    const duration = parseInt(document.getElementById("time").value);
-
-    if (!url || !usersPerSec || !duration) {
-        alert("請完整填寫網址、人數與時間");
-        return;
-    }
+    if (!config.url || !config.rps) return alert("請檢查參數");
 
     running = true;
-    successCount = 0;
-    errorCount = 0;
-    updateStatus("初始化中...");
+    controller = new AbortController();
+    resetStats();
+    updateUI("RUNNING", "active");
 
-    // 設定定時發送請求 (每 1000ms 執行一次)
-    const testInterval = setInterval(() => {
-        for (let i = 0; i < usersPerSec; i++) {
-            if (!running) break;
-            
-            fetch(url, { mode: 'no-cors' }) // 使用 no-cors 以繞過部分跨域限制，但無法讀取詳細內容
-                .then(() => { successCount++; })
-                .catch(() => { errorCount++; })
-                .finally(() => updateProgress());
+    const startTime = Date.now();
+    
+    // 定時任務器
+    const interval = setInterval(() => {
+        if (Date.now() - startTime > config.sec * 1000) {
+            stopTest("Complete");
+            clearInterval(interval);
+            return;
+        }
+
+        for (let i = 0; i < config.rps; i++) {
+            sendRequest(config);
         }
     }, 1000);
-
-    timers.push(testInterval);
-
-    // 設定自動停止
-    const autoStop = setTimeout(() => {
-        stopTest("測試完成");
-    }, duration * 1000);
-    
-    timers.push(autoStop);
 }
 
-function updateProgress() {
+async function sendRequest(cfg) {
     if (!running) return;
-    document.getElementById("status").innerHTML = 
-        `狀態: <span style="color:yellow">運行中...</span><br>` +
-        `成功次數: <span class="count">${successCount}</span><br>` +
-        `失敗次數: <span class="count">${errorCount}</span>`;
+
+    const start = performance.now();
+    try {
+        const res = await fetch(cfg.url, {
+            method: cfg.method,
+            body: cfg.method === 'POST' ? cfg.body : null,
+            mode: 'cors', // 注意：跨域 API 需支援 CORS
+            signal: controller.signal
+        });
+        
+        const end = performance.now();
+        stats.success++;
+        stats.totalLatency += (end - start);
+    } catch (e) {
+        if (e.name !== 'AbortError') stats.error++;
+    }
+    refreshStats();
 }
 
-function updateStatus(msg) {
-    document.getElementById("status").innerText = msg;
+function refreshStats() {
+    document.getElementById("scount").innerText = stats.success;
+    document.getElementById("ecount").innerText = stats.error;
+    const avg = stats.success > 0 ? (stats.totalLatency / stats.success).toFixed(2) : 0;
+    document.getElementById("latency").innerText = `${avg} ms`;
 }
 
-function stopTest(reason = "測試已停止") {
+function updateUI(text, dotClass) {
+    const statusEl = document.getElementById("status");
+    statusEl.innerHTML = `<span class="live-dot ${dotClass}"></span>${text}`;
+}
+
+function stopTest(msg = "Stopped") {
     running = false;
-    timers.forEach(t => clearInterval(t));
-    timers = [];
-    document.getElementById("status").innerHTML = 
-        `<span style="color:red">${reason}</span><br>` +
-        `最終統計 - 成功: ${successCount}, 失敗: ${errorCount}`;
+    controller.abort();
+    updateUI(msg, "");
+}
+
+function resetStats() {
+    stats = { success: 0, error: 0, totalLatency: 0 };
+    refreshStats();
 }
 </script>
-
 </body>
 </html>
