@@ -2,101 +2,98 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Load Test Panel</title>
+<title>Load Test Panel (Live)</title>
 
 <style>
-body{
-background:#0b0b0b;
-color:#00ff9c;
-font-family:monospace;
-text-align:center;
-padding-top:80px;
-}
-
-.panel{
-border:1px solid #00ff9c;
-width:350px;
-margin:auto;
-padding:20px;
-box-shadow:0 0 20px #00ff9c44;
-}
-
-input{
-width:90%;
-padding:8px;
-margin:6px;
-background:#111;
-border:1px solid #00ff9c;
-color:#00ff9c;
-}
-
-button{
-padding:10px 20px;
-margin:5px;
-background:#00ff9c;
-border:none;
-cursor:pointer;
-}
-
-button:hover{
-background:#00cc7a;
-}
-
-#status{
-margin-top:15px;
-}
+body{ background:#0b0b0b; color:#00ff9c; font-family:monospace; text-align:center; padding-top:80px; }
+.panel{ border:1px solid #00ff9c; width:350px; margin:auto; padding:20px; box-shadow:0 0 20px #00ff9c44; }
+input{ width:90%; padding:8px; margin:6px; background:#111; border:1px solid #00ff9c; color:#00ff9c; }
+button{ padding:10px 20px; margin:5px; background:#00ff9c; border:none; cursor:pointer; font-weight:bold; }
+button:hover{ background:#00cc7a; }
+#status{ margin-top:15px; font-size: 0.9em; line-height: 1.5; }
+.count { color: #fff; }
 </style>
 
 </head>
-
 <body>
 
 <div class="panel">
+    <h2>LOAD TEST PANEL</h2>
+    <input id="url" placeholder="https://your-api-link.com" value="https://">
+    <input id="users" type="number" placeholder="每秒請求數 (例如: 10)">
+    <input id="time" type="number" placeholder="測試持續時間 (秒)">
+    <br>
+    <button onclick="startTest()">開始測試</button>
+    <button onclick="stopTest()">強制停止</button>
 
-<h2>LOAD TEST PANEL</h2>
-
-<input id="url" placeholder="輸入測試網址">
-
-<input id="users" placeholder="模擬使用者數">
-
-<input id="time" placeholder="測試時間(秒)">
-
-<br>
-
-<button onclick="startTest()">開始</button>
-<button onclick="stopTest()">停止</button>
-
-<p id="status">等待開始...</p>
-
+    <div id="status">準備就緒</div>
 </div>
 
 <script>
-
 let running = false;
+let timers = [];
+let successCount = 0;
+let errorCount = 0;
 
-function startTest(){
+function startTest() {
+    if (running) return;
 
-let url = document.getElementById("url").value;
-let users = document.getElementById("users").value;
-let time = document.getElementById("time").value;
+    const url = document.getElementById("url").value;
+    const usersPerSec = parseInt(document.getElementById("users").value);
+    const duration = parseInt(document.getElementById("time").value);
 
-running = true;
+    if (!url || !usersPerSec || !duration) {
+        alert("請完整填寫網址、人數與時間");
+        return;
+    }
 
-document.getElementById("status").innerText =
-"測試開始\n網址: "+url+
-"\n模擬使用者: "+users+
-"\n測試時間: "+time+" 秒";
+    running = true;
+    successCount = 0;
+    errorCount = 0;
+    updateStatus("初始化中...");
 
+    // 設定定時發送請求 (每 1000ms 執行一次)
+    const testInterval = setInterval(() => {
+        for (let i = 0; i < usersPerSec; i++) {
+            if (!running) break;
+            
+            fetch(url, { mode: 'no-cors' }) // 使用 no-cors 以繞過部分跨域限制，但無法讀取詳細內容
+                .then(() => { successCount++; })
+                .catch(() => { errorCount++; })
+                .finally(() => updateProgress());
+        }
+    }, 1000);
+
+    timers.push(testInterval);
+
+    // 設定自動停止
+    const autoStop = setTimeout(() => {
+        stopTest("測試完成");
+    }, duration * 1000);
+    
+    timers.push(autoStop);
 }
 
-function stopTest(){
-
-running = false;
-
-document.getElementById("status").innerText="測試已停止";
-
+function updateProgress() {
+    if (!running) return;
+    document.getElementById("status").innerHTML = 
+        `狀態: <span style="color:yellow">運行中...</span><br>` +
+        `成功次數: <span class="count">${successCount}</span><br>` +
+        `失敗次數: <span class="count">${errorCount}</span>`;
 }
 
+function updateStatus(msg) {
+    document.getElementById("status").innerText = msg;
+}
+
+function stopTest(reason = "測試已停止") {
+    running = false;
+    timers.forEach(t => clearInterval(t));
+    timers = [];
+    document.getElementById("status").innerHTML = 
+        `<span style="color:red">${reason}</span><br>` +
+        `最終統計 - 成功: ${successCount}, 失敗: ${errorCount}`;
+}
 </script>
 
 </body>
