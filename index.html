@@ -3,49 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>精確裝置檢測器</title>
-    <!-- 引入專業的裝置識別腳本 -->
+    <title>高級裝置偵測工具</title>
+    <!-- 引入專業型號資料庫 -->
     <script type="text/javascript" src="//wurfl.io/wurfl.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 90%; }
-        h1 { color: #1a73e8; font-size: 1.5rem; }
-        .info { margin-top: 20px; font-size: 1.2rem; color: #333; line-height: 1.6; }
-        .detail { color: #666; font-size: 0.9rem; margin-top: 10px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e1e4e8; }
+        h2 { color: #007aff; margin-top: 0; font-size: 1.4rem; text-align: center; }
+        .item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .label { color: #888; font-size: 0.85rem; margin-bottom: 4px; }
+        .value { color: #222; font-weight: 600; font-size: 1.1rem; }
+        .status { color: #28a745; font-size: 0.8rem; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>您的裝置資訊</h1>
-    <div id="loading">偵測中，請稍候...</div>
-    <div class="info" id="device-name"></div>
-    <div class="detail" id="ua-string"></div>
+    <h2>裝置詳細報告</h2>
+    
+    <div class="item">
+        <div class="label">精確機型名稱</div>
+        <div class="value" id="model-name">偵測中...</div>
+    </div>
+
+    <div class="item">
+        <div class="label">作業系統版本</div>
+        <div class="value" id="os-version">偵測中...</div>
+    </div>
+
+    <div class="item">
+        <div class="label">裝置類型</div>
+        <div class="value" id="device-type">-</div>
+    </div>
+
+    <div class="status" id="status">● 連線正常</div>
 </div>
 
 <script>
-    window.onload = function() {
-        const loading = document.getElementById('loading');
-        const deviceDisplay = document.getElementById('device-name');
-        const uaDisplay = document.getElementById('ua-string');
+window.onload = async function() {
+    const modelEl = document.getElementById('model-name');
+    const osEl = document.getElementById('os-version');
+    const typeEl = document.getElementById('device-type');
 
+    // 1. 獲取精確型號 (WURFL)
+    if (typeof WURFL !== 'undefined') {
+        modelEl.innerText = WURFL.complete_device_name;
+        typeEl.innerText = WURFL.form_factor;
+    } else {
+        modelEl.innerText = "無法獲取 (請檢查網路)";
+    }
+
+    // 2. 獲取系統版本 (優先使用最新 Client Hints API)
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
         try {
-            // WURFL 物件包含經過雲端比對後的精確名稱
-            if (typeof WURFL !== 'undefined') {
-                loading.style.display = 'none';
-                deviceDisplay.innerHTML = `
-                    <strong>品牌與型號：</strong><br>${WURFL.complete_device_name}<br>
-                    <strong>類型：</strong>${WURFL.form_factor}
-                `;
-                uaDisplay.innerText = "瀏覽器特徵 (UA): " + navigator.userAgent;
-            } else {
-                throw new Error("無法載入偵測模組");
-            }
+            const hints = await navigator.userAgentData.getHighEntropyValues(['platformVersion', 'model']);
+            osEl.innerText = navigator.userAgentData.platform + " " + hints.platformVersion;
         } catch (e) {
-            loading.innerText = "偵測失敗，可能受限於瀏覽器隱私設定。";
-            deviceDisplay.innerText = "基本偵測：" + navigator.platform;
+            parseUA(osEl);
         }
-    };
+    } else {
+        // 傳統 User-Agent 解析法 (針對 iOS 或舊版瀏覽器)
+        parseUA(osEl);
+    }
+};
+
+function parseUA(el) {
+    const ua = navigator.userAgent;
+    let version = "未知版本";
+    
+    if (/iPhone|iPad|iPod/.test(ua)) {
+        const match = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
+        if (match) version = "iOS " + match[1] + "." + match[2] + (match[3] ? "." + match[3] : "");
+    } else if (/Android/.test(ua)) {
+        const match = ua.match(/Android (\d+(\.\d+)?)/);
+        if (match) version = "Android " + match[1];
+    } else if (/Macintosh/.test(ua)) {
+        version = "macOS";
+    } else if (/Windows/.test(ua)) {
+        const match = ua.match(/Windows NT (\d+\.\d+)/);
+        version = "Windows (NT " + (match ? match[1] : "") + ")";
+    }
+    el.innerText = version;
+}
 </script>
 
 </body>
