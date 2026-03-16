@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <title>高精確裝置偵測</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 引入目前最強大的免費型號識別庫 -->
+    <!-- 修正後的 WURFL 連結 -->
     <script src="https://wurfl.io"></script>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 320px; }
         .label { color: #666; font-size: 0.8rem; margin-top: 10px; }
-        .value { color: #007aff; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .value { color: #007aff; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; min-height: 1.5em; }
     </style>
 </head>
 <body>
@@ -19,7 +19,7 @@
     <div class="label">裝置型號 (精確)</div>
     <div id="device-model" class="value">偵測中...</div>
 
-    <div class="label">系統版本 (含小版號)</div>
+    <div class="label">系統版本</div>
     <div id="os-version" class="value">偵測中...</div>
     
     <div class="label">螢幕解析度/DPR</div>
@@ -32,35 +32,28 @@ window.onload = function() {
     const versionEl = document.getElementById('os-version');
     const screenEl = document.getElementById('screen-info');
 
-    // 1. 抓取型號 (透過 WURFL 雲端數據比對)
+    // 1. 抓取型號
     if (typeof WURFL !== 'undefined') {
         modelEl.innerText = WURFL.complete_device_name; 
-        // 註：若在 iPad 上，它能辨識出 "Apple iPad Air (5th Gen)"
+    } else {
+        modelEl.innerText = "無法載入資料庫 (請檢查網路)";
     }
 
-    // 2. 抓取詳細版本號 (解析 User Agent)
+    // 2. 抓取版本號 (支援 iPadOS 26.3.1 這種特殊格式)
     const ua = navigator.userAgent;
-    let fullVersion = "未知版本";
+    let fullVersion = "iPadOS / iOS (桌面模式)";
 
-    if (/iPhone|iPad|iPod/.test(ua)) {
-        // 抓取 iOS/iPadOS 的版本格式如 16_3_1
-        const match = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
-        if (match) {
-            const major = match[1];
-            const minor = match[2];
-            const patch = match[3] ? match[3] : "0";
-            fullVersion = `iPadOS / iOS ${major}.${minor}.${patch}`;
-        }
-    } else if (/Android/.test(ua)) {
-        const match = ua.match(/Android (\d+(\.\d+)?(\.\d+)?)/);
-        fullVersion = match ? "Android " + match[1] : "Android 未知版本";
+    // 嘗試從 UA 提取數字
+    const match = ua.match(/(?:OS |Version\/|Android )(\d+[._]\d+[._]?\d?)/);
+    if (match) {
+        fullVersion = match[1].replace(/_/g, '.');
+    } else if (navigator.maxTouchPoints > 1) {
+        fullVersion = "iPadOS (版本受限)";
     }
+    
     versionEl.innerText = fullVersion;
-
-    // 3. 輔助資訊 (輔助人工判定型號)
     screenEl.innerText = `${window.screen.width}x${window.screen.height} (Ratio: ${window.devicePixelRatio})`;
 };
 </script>
-
 </body>
 </html>
