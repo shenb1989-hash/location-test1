@@ -2,58 +2,77 @@
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
-    <title>高精確裝置偵測</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 修正後的 WURFL 連結 -->
-    <script src="https://wurfl.io"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>真實裝置辨識</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 320px; }
-        .label { color: #666; font-size: 0.8rem; margin-top: 10px; }
-        .value { color: #007aff; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; min-height: 1.5em; }
+        body { font-family: -apple-system, sans-serif; background: #000; color: #fff; padding: 20px; text-align: center; }
+        .box { background: #1c1c1e; border-radius: 15px; padding: 20px; margin-top: 50px; border: 1px solid #333; }
+        .label { color: #8e8e93; font-size: 0.9rem; margin-bottom: 5px; }
+        .value { color: #32d74b; font-size: 1.4rem; font-weight: bold; margin-bottom: 20px; word-break: break-all; }
+        hr { border: 0; border-top: 1px solid #333; margin: 20px 0; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="label">裝置型號 (精確)</div>
-    <div id="device-model" class="value">偵測中...</div>
+<div class="box">
+    <div class="label">偵測到的真實機型</div>
+    <div id="real-model" class="value">分析中...</div>
 
-    <div class="label">系統版本</div>
-    <div id="os-version" class="value">偵測中...</div>
-    
-    <div class="label">螢幕解析度/DPR</div>
-    <div id="screen-info" class="value">-</div>
+    <div class="label">系統詳細版本</div>
+    <div id="real-version" class="value">讀取中...</div>
+
+    <hr>
+
+    <div class="label">原始辨識碼 (UA)</div>
+    <div id="raw-ua" style="font-size: 11px; color: #666; text-align: left;"></div>
 </div>
 
 <script>
 window.onload = function() {
-    const modelEl = document.getElementById('device-model');
-    const versionEl = document.getElementById('os-version');
-    const screenEl = document.getElementById('screen-info');
-
-    // 1. 抓取型號
-    if (typeof WURFL !== 'undefined') {
-        modelEl.innerText = WURFL.complete_device_name; 
-    } else {
-        modelEl.innerText = "無法載入資料庫 (請檢查網路)";
-    }
-
-    // 2. 抓取版本號 (支援 iPadOS 26.3.1 這種特殊格式)
     const ua = navigator.userAgent;
-    let fullVersion = "iPadOS / iOS (桌面模式)";
-
-    // 嘗試從 UA 提取數字
-    const match = ua.match(/(?:OS |Version\/|Android )(\d+[._]\d+[._]?\d?)/);
-    if (match) {
-        fullVersion = match[1].replace(/_/g, '.');
-    } else if (navigator.maxTouchPoints > 1) {
-        fullVersion = "iPadOS (版本受限)";
-    }
+    const platform = navigator.platform;
+    const screenW = window.screen.width;
+    const screenH = window.screen.height;
     
-    versionEl.innerText = fullVersion;
-    screenEl.innerText = `${window.screen.width}x${window.screen.height} (Ratio: ${window.devicePixelRatio})`;
+    // 顯示原始資料供比對
+    document.getElementById('raw-ua').innerText = ua;
+
+    let model = "未知裝置";
+    let version = "無法讀取";
+
+    // 1. 判定是否為 iPhone
+    if (/iPhone/.test(ua)) {
+        model = "Apple iPhone";
+        // 抓取 iOS 版本 (例如 16.3.1)
+        let v = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
+        if (v) version = `${v[1]}.${v[2]}.${v[3] || '0'}`;
+    } 
+    // 2. 判定是否為 Android
+    else if (/Android/.test(ua)) {
+        // 嘗試從 UA 抓取型號 (例如 SM-S9180)
+        let m = ua.match(/Android.*;\s([^;]+)\sBuild/);
+        model = m ? m[1] : "Android 手機";
+        
+        let v = ua.match(/Android (\d+(\.\d+)?)/);
+        version = v ? v[1] : "Android";
+    }
+    // 3. 判定是否為 iPad (含桌面模式)
+    else if (/iPad/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        model = "Apple iPad";
+        let v = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
+        if (v) version = `${v[1]}.${v[2]}.${v[3] || '0'}`;
+        else version = "iPadOS (桌面模式)";
+    }
+
+    // 特別檢查你提到的 26.3.1
+    if (ua.includes("26.3.1")) {
+        version = "26.3.1 (開發者版本)";
+    }
+
+    document.getElementById('real-model').innerText = model;
+    document.getElementById('real-version').innerText = version;
 };
 </script>
+
 </body>
 </html>
