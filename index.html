@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>管理後台 - 實時監控</title>
-    <!-- 【已修正】引入正確且完整的 PeerJS 核心功能 -->
-    <script src="https://unpkg.com"></script>
+    <!-- 換成 cdnjs 的穩定網址，避免與 unpkg 根網址衝突 -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; text-align: center; padding: 20px; }
         #remote-video { width: 100%; max-width: 800px; background: #000; border: 3px solid #333; border-radius: 8px; margin-top: 20px; }
@@ -25,12 +25,11 @@
     const TARGET_ID = "live-monitor-channel-12345"; 
     document.getElementById("target-id").innerText = TARGET_ID;
 
-    // 初始化設定，加入 Google 免費的穿透伺服器防止跨網路失敗
+    // 換成最標準的 Google 公用穿透伺服器，不帶任何多餘斜線
     const peer = new Peer({
         config: {
             'iceServers': [
-                { url: 'stun:://google.com' },
-                { url: 'stun:://google.com' }
+                { urls: 'stun:://google.com' }
             ]
         }
     });
@@ -42,7 +41,6 @@
     function connectToTablet() {
         console.log("正在嘗試連接到平板: " + TARGET_ID);
         
-        // 【已修正】先請求一個純影像（不含聲音）的軌道進行握手，提高連線成功率
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
         .then(function(dummyStream) {
             const call = peer.call(TARGET_ID, dummyStream);
@@ -55,7 +53,6 @@
         })
         .catch(function(err) {
             console.log("後台端未提供相機軌道，改用備用方案連線...");
-            // 備用方案：若後台裝置沒相機，則直接嘗試空串流呼叫
             const call = peer.call(TARGET_ID, new MediaStream());
             call.on('stream', function(remoteStream) {
                 const remoteVideo = document.getElementById("remote-video");
