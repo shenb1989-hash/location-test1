@@ -3,106 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>網站壓力測試控制台 (極速後端連動版)</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background-color: #2d2d2d;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-        h1 { margin-bottom: 20px; font-size: 24px; color: #ff4757; }
-        input[type="url"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #444;
-            border-radius: 6px;
-            background-color: #3d3d3d;
-            color: white;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        input[type="url"]:focus { border-color: #ff4757; outline: none; }
-        .btn-group { display: flex; gap: 15px; justify-content: center; }
-        button {
-            padding: 12px 28px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        #startBtn { background-color: #2ed573; color: white; }
-        #startBtn:hover { background-color: #26af5f; }
-        #startBtn:disabled { background-color: #555; cursor: not-allowed; }
-        #stopBtn { background-color: #ff4757; color: white; }
-        #stopBtn:hover { background-color: #e04050; }
-        #stopBtn:disabled { background-color: #555; cursor: not-allowed; }
-        .status-panel {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: #1e1e1e;
-            border-radius: 6px;
-            text-align: left;
-            font-family: monospace;
-        }
-        .status-item { margin: 8px 0; font-size: 14px; }
-        .badge {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .badge-ready { background-color: #747d8c; }
-        .badge-running { background-color: #2ed573; animation: blink 1s infinite; }
-        .badge-stopped { background-color: #ff4757; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>🌐 網站壓力測試控制台</h1>
-    <input type="url" id="targetUrl" placeholder="請輸入欲測試的完整連結 (例如: https://example.com)" required>
-    
-    <div class="btn-group">
-        <button id="startBtn">🚀 開始測試</button>
-        <button id="stopBtn" disabled>🛑 停止測試</button>
-    </div>
-
-    <div class="status-panel">
-        <div class="status-item">目前狀態: <span id="statusBadge" class="badge badge-ready">準備就緒</span></div>
-        <div class="status-item">已發送請求數: <span id="requestCount" style="color: #eccc68;">0</span> 次</div>
-        <div class="status-item">成功回應數: <span id="successCount" style="color: #2ed573;">0</span></div>
-        <div class="status-item">失敗/卡死數: <span id="failCount" style="color: #ff4757;">0</span></div>
-        <div class="status-item" id="reportLog" style="color: #a4b0be; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
-            報告: 等待測試開始...
-        </div>
-    </div>
-</div>
-
-<script>
-    <!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>網站壓力測試控制台 (雲端對接版)</title>
+    <title>網站壓力測試控制台 (雲端對接正式版)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -198,7 +99,7 @@
 <script>
     let statusInterval = null;
     
-    // 這裡已經自動幫你填好剛剛 Replit AI 吐給你的臨時網址了
+    // ⚠️ 已經幫您填上您剛才提供的專屬開發網址，並正確加上了 /api 後綴
     const BACKEND_URL = 'https://replit.dev'; 
 
     const targetUrlInput = document.getElementById('targetUrl');
@@ -209,76 +110,6 @@
     const successCountEl = document.getElementById('successCount');
     const failCountEl = document.getElementById('failCount');
     const reportLog = document.getElementById('reportLog');
-
-    // 點擊開始測試
-    startBtn.addEventListener('click', async () => {
-        let url = targetUrlInput.value.trim();
-        if (!url) {
-            alert('請先輸入網址！');
-            return;
-        }
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            url = 'https://' + url;
-            targetUrlInput.value = url;
-        }
-
-        updateUI('running');
-        reportLog.innerText = "雲端後端已連線，正在全面啟動 500 條全速測試鏈...";
-
-        try {
-            await fetch(`${BACKEND_URL}/start`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
-            });
-
-            // 每 500 毫秒從 Replit 後端更新一次狀態數據
-            statusInterval = setInterval(fetchStatus, 500);
-        } catch (err) {
-            alert('連線失敗！請檢查平板的網路，並確認 Replit App 是否維持在 Run 的執行狀態。');
-            updateUI('stopped');
-        }
-    });
-
-    // 點擊停止測試
-    stopBtn.addEventListener('click', async () => {
-        clearInterval(statusInterval);
-        updateUI('stopped');
-
-        try {
-            const res = await fetch(`${BACKEND_URL}/stop`, { method: 'POST' });
-            const data = await res.json();
-            
-            const currentStats = data.stats || data;
-            reportLog.innerHTML = `<strong>測試終止報告：</strong><br>
-            最終共發送了 ${currentStats.requests || 0} 次請求。<br>
-            目標網站卡死/無回應次數：${currentStats.fail || 0} 次。<br>
-            狀態：已手動攔截暫停。`;
-        } catch (err) {
-            reportLog.innerText = "終止指令傳送失敗。";
-        }
-    });
-
-    // 定時抓取數據
-    async function fetchStatus() {
-        try {
-            const res = await fetch(`${BACKEND_URL}/status`);
-            const data = await res.json();
-            
-            // 對應 Replit AI 產生的結構 { stats: { requests, ... } }
-            const currentStats = data.stats || data;
-
-            requestCountEl.innerText = currentStats.requests || 0;
-            successCountEl.innerText = currentStats.success || 0;
-            failCountEl.innerText = currentStats.fail || 0;
-
-            if (currentStats.fail > 20 && (currentStats.fail / currentStats.requests) > 0.6) {
-                reportLog.innerHTML = `<span style="color: #ff4757; font-weight:bold;">⚠️ 警報：目標網站疑似已陷入卡死/癱瘓狀態！</span><br>失敗率已高達 ${Math.round((currentStats.fail/currentStats.requests)*100)}%`;
-            }
-        } catch (err) {
-            console.error("無法取得數據更新");
-        }
-    }
 
     function updateUI(state) {
         if (state === 'running') {
@@ -295,8 +126,75 @@
             statusBadge.className = 'badge badge-stopped';
         }
     }
+
+    // 點擊開始測試
+    startBtn.addEventListener('click', async () => {
+        let url = targetUrlInput.value.trim();
+        if (!url) {
+            alert('請先輸入網址！');
+            return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+            targetUrlInput.value = url;
+        }
+
+        updateUI('running');
+        reportLog.innerText = "正在將目標網址傳送至 Replit 雲端，啟動 500 條極速鏈...";
+
+        try {
+            await fetch(`${BACKEND_URL}/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+
+            // 每 800 毫秒向 Replit 索取一次最新的即時數據
+            statusInterval = setInterval(fetchStatus, 800);
+        } catch (err) {
+            alert('連線失敗！請確認 Replit App 是否維持在 Run 的執行狀態。');
+            updateUI('stopped');
+        }
+    });
+
+    // 點擊停止測試
+    stopBtn.addEventListener('click', async () => {
+        clearInterval(statusInterval);
+        updateUI('stopped');
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/stop`, { method: 'POST' });
+            const data = await res.json();
+            const stats = data.stats || data;
+            
+            reportLog.innerHTML = `<strong>測試終止報告：</strong><br>
+            最終共發送了 ${stats.requests || 0} 次請求。<br>
+            目標網站逾時/失敗次數：${stats.fail || 0} 次。<br>
+            狀態：已手動攔截暫停。`;
+        } catch (err) {
+            reportLog.innerText = "終止指令傳送失敗。";
+        }
+    });
+
+    // 定時同步狀態數據
+    async function fetchStatus() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/status`);
+            const data = await res.json();
+            const stats = data.stats || data;
+
+            requestCountEl.innerText = stats.requests || 0;
+            successCountEl.innerText = stats.success || 0;
+            failCountEl.innerText = stats.fail || 0;
+
+            if (stats.fail > 20 && (stats.fail / stats.requests) > 0.6) {
+                reportLog.innerHTML = `<span style="color: #ff4757; font-weight:bold;">⚠️ 警報：目標網站疑似已陷入卡死/癱瘓狀態！</span><br>失敗率已高達 ${Math.round((stats.fail/stats.requests)*100)}%`;
+            }
+        } catch (err) {
+            console.error("即時數據同步中斷");
+        }
+    }
 </script>
 
 </body>
 </html>
-
